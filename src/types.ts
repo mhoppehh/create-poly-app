@@ -15,6 +15,13 @@ export interface InstallScript {
   dir?: string
 }
 
+export interface FeatureStage {
+  name: string
+  scripts?: InstallScript[]
+  templates?: InstallTemplates
+  mods?: Record<string, CodeMod[]>
+}
+
 export interface Feature {
   id: string
   name: string
@@ -31,15 +38,6 @@ export interface Feature {
   // Merging for JSON config files
   configMerges?: Record<string, object>
 
-  preInstallScripts?: InstallScript[]
-  adInstallScripts?: InstallScript[]
-  postInstallScripts?: InstallScript[]
-
-  preInstallTemplate?: InstallTemplates
-  adInstallTemplate?: InstallTemplates
-  postInstallTemplate?: InstallTemplates
-
-  preInstallMods?: Record<string, CodeMod[]>
-  adInstallMods?: Record<string, CodeMod[]>
-  postInstallMods?: Record<string, CodeMod[]>
+  // Flexible stages system
+  stages?: FeatureStage[]
 }

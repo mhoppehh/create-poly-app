@@ -11,72 +11,100 @@ export const FEATURES: Record<string, Feature> = {
     id: 'projectDir',
     description: 'The root directory of the project',
     name: 'Project Directory',
-    preInstallScripts: [{ src: args => `mkdir -p ${args.projectName}`, dir: '../' }],
-    adInstallTemplate: {
-      'templates/pnpm-workspace.template.yaml': {
-        destination: 'pnpm-workspace.yaml',
+    stages: [
+      {
+        name: 'setup-directory',
+        scripts: [{ src: args => `mkdir -p ${args.projectName}`, dir: '../' }],
       },
-    },
+      {
+        name: 'create-workspace',
+        templates: {
+          'templates/pnpm-workspace.template.yaml': {
+            destination: 'pnpm-workspace.yaml',
+          },
+        },
+      },
+    ],
   },
   vite: {
     id: 'vite',
     description: 'A modern frontend build tool',
     name: 'Vite',
     dependsOn: ['projectDir'],
-    adInstallScripts: [{ src: 'npm create vite@latest web -- --template react-ts' }],
+    stages: [
+      {
+        name: 'create-vite-app',
+        scripts: [{ src: 'npm create vite@latest web -- --template react-ts' }],
+      },
+    ],
   },
   tailwind: {
     id: 'tailwind',
     description: 'A utility-first CSS framework',
     name: 'TailwindCSS',
     dependsOn: ['vite'],
-    preInstallScripts: [{ src: 'pnpm install tailwindcss @tailwindcss/vite', dir: 'web' }],
     devDependencies: {
       tailwindcss: '^3.4.0',
       postcss: '^8.4.30',
       autoprefixer: '^10.4.10',
     },
-    postInstallMods: {
-      'web/vite.config.ts': [addViteConfig],
-      'web/src/index.css': [addTailwindImport],
-    },
+    stages: [
+      {
+        name: 'install-tailwind',
+        scripts: [{ src: 'pnpm install tailwindcss @tailwindcss/vite', dir: 'web' }],
+      },
+      {
+        name: 'configure-tailwind',
+        mods: {
+          'web/vite.config.ts': [addViteConfig],
+          'web/src/index.css': [addTailwindImport],
+        },
+      },
+    ],
   },
   'apollo-server': {
     id: 'apollo-server',
     description: 'A GraphQL Server for React',
     name: 'Apollo Server',
     dependsOn: ['projectDir'],
-    preInstallScripts: [
-      { src: 'mkdir -p api' },
-      { src: 'pnpm init && pnpm pkg set type="module"', dir: 'api' },
-      { src: 'mkdir -p src', dir: 'api' },
-      { src: 'touch index.ts', dir: 'api/src' },
-      { src: 'pnpm install -D typescript @types/node', dir: 'api/src' },
+    stages: [
+      {
+        name: 'setup-api-structure',
+        scripts: [
+          { src: 'pnpm init && pnpm pkg set type="module"', dir: 'api' },
+          { src: 'pnpm install -D typescript @types/node', dir: 'api' },
+        ],
+        templates: {
+          'templates/api/tsconfig.json.hbs': {
+            destination: 'api/tsconfig.json',
+          },
+        },
+      },
+      {
+        name: 'install-dependencies',
+        scripts: [{ src: 'pnpm install @apollo/server graphql', dir: 'api' }],
+      },
+      {
+        name: 'configure-workspace',
+        mods: {
+          'api/package.json': [modPackageJsonApolloServer],
+          'pnpm-workspace.yaml': [addApiToPnpmWorkspace],
+        },
+      },
+      {
+        name: 'create-modules',
+        templates: {
+          'templates/api/index.ts.hbs': {
+            destination: 'api/src/index.ts',
+          },
+          'templates/api/modules/index.ts.hbs': {
+            destination: 'api/src/modules/index.ts',
+          },
+          'templates/api/modules/books/books.ts.hbs': {
+            destination: 'api/src/modules/books/books.ts',
+          },
+        },
+      },
     ],
-    preInstallTemplate: {
-      'templates/api/tsconfig.json.hbs': {
-        destination: 'api/tsconfig.json',
-      },
-    },
-    adInstallScripts: [{ src: 'pnpm install @apollo/server graphql', dir: 'api' }],
-    postInstallMods: {
-      'api/package.json': [modPackageJsonApolloServer],
-      'pnpm-workspace.yaml': [addApiToPnpmWorkspace],
-    },
-    postInstallScripts: [
-      { src: 'mkdir -p modules', dir: 'api/src' },
-      { src: 'mkdir -p books', dir: 'api/src/modules' },
-    ],
-    postInstallTemplate: {
-      'templates/api/index.ts.hbs': {
-        destination: 'api/src/index.ts',
-      },
-      'templates/api/modules/index.ts.hbs': {
-        destination: 'api/src/modules/index.ts',
-      },
-      'templates/api/modules/books/books.ts.hbs': {
-        destination: 'api/src/modules/books/books.ts',
-      },
-    },
   },
 }

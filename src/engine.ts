@@ -31,7 +31,7 @@ function sortFeatures(featureIds: string[]): string[] {
       throw new Error(`Feature not found: ${id}`)
     }
     if (feature.dependsOn) {
-      feature.dependsOn.forEach((depId) => visit(depId))
+      feature.dependsOn.forEach(depId => visit(depId))
     }
 
     visiting.delete(id)
@@ -39,7 +39,7 @@ function sortFeatures(featureIds: string[]): string[] {
     sorted.push(id)
   }
 
-  featureIds.forEach((id) => visit(id))
+  featureIds.forEach(id => visit(id))
   return sorted
 }
 
@@ -48,7 +48,7 @@ export async function scaffoldProject(projectName: string, projectDir: string, f
 
   // 1. SORT FEATURES
   const sortedIds = sortFeatures(featureIds)
-  const features = sortedIds.map((id) => FEATURES[id])
+  const features = sortedIds.map(id => FEATURES[id])
 
   async function runScripts(scripts: InstallScript[] | undefined, args: any) {
     if (!scripts) return
@@ -61,8 +61,15 @@ export async function scaffoldProject(projectName: string, projectDir: string, f
       }
 
       let cd = `cd ${projectDir}`
+      let targetDir = projectDir
       if (scriptFn.dir) {
-        cd = `cd ${path.join(projectDir, scriptFn.dir)}`
+        targetDir = path.join(projectDir, scriptFn.dir)
+        // Create the target directory if it doesn't exist
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true })
+          console.log(`Created directory for script: ${targetDir}`)
+        }
+        cd = `cd ${targetDir}`
       }
 
       console.log(`Running script: ${src}`)
@@ -132,27 +139,33 @@ export async function scaffoldProject(projectName: string, projectDir: string, f
     await project.save()
   }
 
+  // Helper to process a single stage
+  async function processStage(stageName: string, scripts?: any[], templates?: any, mods?: any) {
+    const args = { projectName, projectDir }
+
+    console.log(`  Processing stage: ${stageName}`)
+    await runScripts(scripts, args)
+    await copyTemplates(templates, args)
+    await runMods(mods)
+  }
+
   // Run install steps for each feature in sorted order
   for (const feature of features) {
     if (!feature) {
       console.log('Feature not found')
       continue
     }
-    const args = { projectName, projectDir }
-    // PRE-INSTALL
-    await runScripts(feature.preInstallScripts, args)
-    await copyTemplates(feature.preInstallTemplate, args)
-    await runMods(feature.preInstallMods)
 
-    // AD-INSTALL
-    await runScripts(feature.adInstallScripts, args)
-    await copyTemplates(feature.adInstallTemplate, args)
-    await runMods(feature.adInstallMods)
+    console.log(`Processing feature: ${feature.name}`)
 
-    // POST-INSTALL
-    await runScripts(feature.postInstallScripts, args)
-    await copyTemplates(feature.postInstallTemplate, args)
-    await runMods(feature.postInstallMods)
+    // Process all stages
+    if (feature.stages && feature.stages.length > 0) {
+      for (const stage of feature.stages) {
+        await processStage(stage.name, stage.scripts, stage.templates, stage.mods)
+      }
+    } else {
+      console.log(`  No stages defined for feature: ${feature.name}`)
+    }
   }
 
   console.log('Scaffold complete.')
