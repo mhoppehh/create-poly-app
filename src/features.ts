@@ -84,7 +84,7 @@ export const FEATURES: Record<string, Feature> = {
       },
       {
         name: 'install-dependencies',
-        scripts: [{ src: 'pnpm install @apollo/server graphql', dir: 'api' }],
+        scripts: [{ src: 'pnpm install --filter=api @apollo/server graphql', dir: 'api' }],
       },
       {
         name: 'configure-workspace',
@@ -101,12 +101,6 @@ export const FEATURES: Record<string, Feature> = {
             dir: 'api',
           },
         ],
-        // templates: [
-        //   {
-        //     source: 'templates/apollo-server',
-        //     destination: 'api',
-        //   },
-        // ],
       },
     ],
   },
