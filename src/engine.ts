@@ -2,13 +2,12 @@ import * as path from 'path'
 import * as fs from 'fs'
 import * as fsp from 'fs/promises'
 import { Project } from 'ts-morph'
-import { merge } from 'lodash'
 import handlebars from 'handlebars'
 import { execSync } from 'child_process'
 
 import { CodeMod, InstallScript } from './types'
 import { FEATURES } from './features'
-import { createFile, createFolder } from './utils'
+import { getLogger } from './logger'
 
 // In your engine.ts
 function sortFeatures(featureIds: string[]): string[] {
@@ -44,14 +43,16 @@ function sortFeatures(featureIds: string[]): string[] {
 }
 
 export async function scaffoldProject(projectName: string, projectDir: string, featureIds: string[]) {
-  console.log(`Scaffolding ${projectName}...`)
+  const logger = getLogger()
+  logger.projectStart('engine', projectName)
 
   // 1. SORT FEATURES
   const sortedIds = sortFeatures(featureIds)
   const features = sortedIds.map(id => FEATURES[id])
 
-  async function runScripts(scripts: InstallScript[] | undefined, args: any) {
+  async function runScripts(scripts: InstallScript[] | undefined, args: any, featureName: string) {
     if (!scripts) return
+
     for (const scriptFn of scripts) {
       let src: string
       if (typeof scriptFn.src === 'string') {
@@ -67,24 +68,43 @@ export async function scaffoldProject(projectName: string, projectDir: string, f
         // Create the target directory if it doesn't exist
         if (!fs.existsSync(targetDir)) {
           fs.mkdirSync(targetDir, { recursive: true })
-          console.log(`Created directory for script: ${targetDir}`)
+          logger.directoryCreated(featureName, targetDir)
         }
         cd = `cd ${targetDir}`
       }
 
-      console.log(`Running script: ${src}`)
+      logger.scriptStart(featureName, src)
       try {
-        // Execute the script and stream output to the parent process
-        execSync([cd, src].join(' && '), { stdio: 'inherit' })
-      } catch (err) {
-        console.error(`Script failed: ${src}`)
+        // Execute the script with suppressed output, only log to file
+        const result = execSync([cd, src].join(' && '), {
+          stdio: ['inherit', 'pipe', 'pipe'],
+          encoding: 'utf8',
+        })
+
+        // Log the command output to file only
+        if (result) {
+          logger.infoFileOnly(featureName, 'Script output: %s', result)
+        }
+
+        logger.scriptComplete(featureName, src)
+      } catch (err: any) {
+        // Log error output to file
+        if (err.stdout) {
+          logger.infoFileOnly(featureName, 'Script stdout: %s', err.stdout)
+        }
+        if (err.stderr) {
+          logger.infoFileOnly(featureName, 'Script stderr: %s', err.stderr)
+        }
+
+        logger.scriptFailed(featureName, src, err)
         throw err
       }
     }
   }
 
-  async function copyTemplates(templates: Record<string, any> | undefined, args: any) {
+  async function copyTemplates(templates: Record<string, any> | undefined, args: any, featureName: string) {
     if (!templates) return
+
     for (const [src, tpl] of Object.entries(templates)) {
       // Resolve template source: absolute, then relative to this file, then relative to cwd
       let templatePath = src
@@ -101,7 +121,7 @@ export async function scaffoldProject(projectName: string, projectDir: string, f
       }
 
       if (!fs.existsSync(templatePath)) {
-        console.warn(`Template not found: ${src} (resolved: ${templatePath}), skipping`)
+        logger.warn(featureName, 'Template not found: %s (resolved: %s), skipping', src, templatePath)
         continue
       }
 
@@ -115,58 +135,59 @@ export async function scaffoldProject(projectName: string, projectDir: string, f
       const destDir = path.dirname(destPath)
       if (!fs.existsSync(destDir)) {
         fs.mkdirSync(destDir, { recursive: true })
-        console.log('Created directory for template:', destDir)
+        logger.directoryCreated(featureName, destDir)
       }
 
       await fsp.writeFile(destPath, rendered, 'utf8')
-      console.log(`Wrote template ${src} -> ${destPath}`)
+      logger.templateWritten(featureName, src, destPath)
     }
   }
 
   // Helper to run code mods
-  async function runMods(mods: Record<string, CodeMod[]> | undefined) {
+  async function runMods(mods: Record<string, CodeMod[]> | undefined, featureName: string) {
     if (!mods) return
     const project = new Project()
+
     for (const [relativePath, modFns] of Object.entries(mods)) {
       const filePath = path.join(projectDir, relativePath)
       if (!fs.existsSync(filePath)) continue
       const sourceFile = project.addSourceFileAtPath(filePath)
       for (const mod of modFns) {
         mod(sourceFile)
-        console.log(`Applied code mod to ${filePath}`)
+        logger.codeModApplied(featureName, filePath)
       }
     }
     await project.save()
   }
 
   // Helper to process a single stage
-  async function processStage(stageName: string, scripts?: any[], templates?: any, mods?: any) {
+  async function processStage(stageName: string, featureName: string, scripts?: any[], templates?: any, mods?: any) {
     const args = { projectName, projectDir }
 
-    console.log(`  Processing stage: ${stageName}`)
-    await runScripts(scripts, args)
-    await copyTemplates(templates, args)
-    await runMods(mods)
+    logger.stageProcessing(featureName, stageName)
+    await runScripts(scripts, args, featureName)
+    await copyTemplates(templates, args, featureName)
+    await runMods(mods, featureName)
   }
 
   // Run install steps for each feature in sorted order
   for (const feature of features) {
     if (!feature) {
-      console.log('Feature not found')
+      logger.warn('engine', 'Feature not found')
       continue
     }
 
-    console.log(`Processing feature: ${feature.name}`)
+    logger.featureProcessing(feature.name, feature.name)
 
     // Process all stages
     if (feature.stages && feature.stages.length > 0) {
       for (const stage of feature.stages) {
-        await processStage(stage.name, stage.scripts, stage.templates, stage.mods)
+        await processStage(stage.name, feature.name, stage.scripts, stage.templates, stage.mods)
       }
     } else {
-      console.log(`  No stages defined for feature: ${feature.name}`)
+      logger.warn(feature.name, 'No stages defined for feature: %s', feature.name)
     }
   }
 
-  console.log('Scaffold complete.')
+  logger.projectComplete('engine')
 }

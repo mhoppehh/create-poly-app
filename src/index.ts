@@ -2,8 +2,21 @@
 import prompts from 'prompts'
 import path from 'path'
 import { scaffoldProject } from './engine'
+import { createLogger } from './logger'
+import { loadLoggingConfig } from './config'
 
 async function main() {
+  // Initialize logger with configuration
+  const loggingConfig = loadLoggingConfig()
+  const logger = createLogger({
+    logLevel: loggingConfig.level,
+    logFilePath: path.resolve(process.cwd(), loggingConfig.logFilePath || 'create-poly-app.log'),
+    enableConsole: loggingConfig.enableConsole,
+    enableFile: loggingConfig.enableFile,
+  })
+
+  logger.infoFileOnly('main', 'Starting create-poly-app')
+
   const response = await prompts([
     {
       type: 'text',
@@ -22,11 +35,25 @@ async function main() {
     // ... more questions for React vs React Native, etc.
   ])
 
-  console.log('User choices:', response)
+  logger.infoFileOnly('main', 'User choices: %o', response)
   const projectPath = path.resolve(process.cwd(), response.projectName)
-  console.log(`Project will be created at: ${projectPath}`)
+  logger.infoFileOnly('main', 'Project will be created at: %s', projectPath)
 
-  scaffoldProject(response.projectName, projectPath, ['projectDir', 'vite', 'tailwind', 'apollo-server'])
+  try {
+    await scaffoldProject(response.projectName, projectPath, ['projectDir', 'vite', 'tailwind', 'apollo-server'])
+  } catch (error) {
+    logger.error('main', 'Project creation failed: %s', error)
+    process.exit(1)
+  }
 }
 
-main().catch(console.error)
+main().catch(error => {
+  const loggingConfig = loadLoggingConfig()
+  const logger = createLogger({
+    logLevel: loggingConfig.level,
+    enableConsole: loggingConfig.enableConsole,
+    enableFile: loggingConfig.enableFile,
+  })
+  logger.error('main', 'Unhandled error: %s', error)
+  process.exit(1)
+})

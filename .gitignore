@@ -1,3 +1,7 @@
 /dist
 /my-awesome-project
 node_modules/
+
+# Log files
+*.log
+create-poly-app.log
