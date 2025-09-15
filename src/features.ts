@@ -18,11 +18,12 @@ export const FEATURES: Record<string, Feature> = {
       },
       {
         name: 'create-workspace',
-        templates: {
-          'templates/pnpm-workspace.template.yaml': {
+        templates: [
+          {
+            source: 'templates/pnpm-workspace.template.yaml',
             destination: 'pnpm-workspace.yaml',
           },
-        },
+        ],
       },
     ],
   },
@@ -74,11 +75,12 @@ export const FEATURES: Record<string, Feature> = {
           { src: 'pnpm init && pnpm pkg set type="module"', dir: 'api' },
           { src: 'pnpm install -D typescript @types/node', dir: 'api' },
         ],
-        templates: {
-          'templates/api/tsconfig.json.hbs': {
-            destination: 'api/tsconfig.json',
+        templates: [
+          {
+            source: 'templates/apollo-server',
+            destination: 'api',
           },
-        },
+        ],
       },
       {
         name: 'install-dependencies',
@@ -93,17 +95,18 @@ export const FEATURES: Record<string, Feature> = {
       },
       {
         name: 'create-modules',
-        templates: {
-          'templates/api/index.ts.hbs': {
-            destination: 'api/src/index.ts',
+        scripts: [
+          {
+            src: 'pnpm install --filter=api @graphql-tools/load-files @graphql-tools/merge @graphql-tools/utils graphql-scalars',
+            dir: 'api',
           },
-          'templates/api/modules/index.ts.hbs': {
-            destination: 'api/src/modules/index.ts',
-          },
-          'templates/api/modules/books/books.ts.hbs': {
-            destination: 'api/src/modules/books/books.ts',
-          },
-        },
+        ],
+        // templates: [
+        //   {
+        //     source: 'templates/apollo-server',
+        //     destination: 'api',
+        //   },
+        // ],
       },
     ],
   },

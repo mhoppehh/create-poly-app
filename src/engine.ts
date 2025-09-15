@@ -4,8 +4,9 @@ import * as fsp from 'fs/promises'
 import { Project } from 'ts-morph'
 import handlebars from 'handlebars'
 import { execSync } from 'child_process'
+import { glob } from 'glob'
 
-import { CodeMod, InstallScript } from './types'
+import { CodeMod, InstallScript, InstallTemplate } from './types'
 import { FEATURES } from './features'
 import { getLogger } from './logger'
 
@@ -102,45 +103,108 @@ export async function scaffoldProject(projectName: string, projectDir: string, f
     }
   }
 
-  async function copyTemplates(templates: Record<string, any> | undefined, args: any, featureName: string) {
+  async function copyTemplates(templates: InstallTemplate[] | undefined, args: any, featureName: string) {
     if (!templates) return
 
-    for (const [src, tpl] of Object.entries(templates)) {
-      // Resolve template source: absolute, then relative to this file, then relative to cwd
-      let templatePath = src
-      if (!path.isAbsolute(templatePath)) {
-        const candidate = path.join(__dirname, templatePath)
-        if (fs.existsSync(candidate)) {
-          templatePath = candidate
-        } else {
-          const cwdCandidate = path.join(process.cwd(), templatePath)
-          if (fs.existsSync(cwdCandidate)) {
-            templatePath = cwdCandidate
-          }
+    for (const template of templates) {
+      await processTemplate(template, args, featureName)
+    }
+  }
+
+  async function processTemplate(template: InstallTemplate, args: any, featureName: string) {
+    const { source, destination, context = {} } = template
+
+    // Resolve template source path
+    let sourcePath = source
+    if (!path.isAbsolute(sourcePath)) {
+      const candidate = path.join(__dirname, sourcePath)
+      if (fs.existsSync(candidate)) {
+        sourcePath = candidate
+      } else {
+        const cwdCandidate = path.join(process.cwd(), sourcePath)
+        if (fs.existsSync(cwdCandidate)) {
+          sourcePath = cwdCandidate
         }
       }
-
-      if (!fs.existsSync(templatePath)) {
-        logger.warn(featureName, 'Template not found: %s (resolved: %s), skipping', src, templatePath)
-        continue
-      }
-
-      // Render template with Handlebars using supplied context merged with runtime args
-      const templateSrc = await fsp.readFile(templatePath, 'utf8')
-      const template = handlebars.compile(templateSrc)
-      const context = Object.assign({}, tpl.context || {}, args)
-      const rendered = template(context)
-
-      const destPath = path.join(projectDir, tpl.destination)
-      const destDir = path.dirname(destPath)
-      if (!fs.existsSync(destDir)) {
-        fs.mkdirSync(destDir, { recursive: true })
-        logger.directoryCreated(featureName, destDir)
-      }
-
-      await fsp.writeFile(destPath, rendered, 'utf8')
-      logger.templateWritten(featureName, src, destPath)
     }
+
+    // Handle different source types
+    const sourceStats = fs.existsSync(sourcePath) ? fs.statSync(sourcePath) : null
+
+    if (!sourceStats) {
+      // Try as glob pattern
+      const matches = await glob(sourcePath, { nodir: true })
+      if (matches.length === 0) {
+        logger.warn(featureName, 'No templates found matching pattern: %s', source)
+        return
+      }
+
+      for (const match of matches) {
+        await processTemplateFile(match, template, args, featureName, sourcePath)
+      }
+    } else if (sourceStats.isDirectory()) {
+      // Process entire directory
+      const pattern = path.join(sourcePath, '**', '*.hbs')
+      const matches = await glob(pattern, { nodir: true })
+
+      for (const match of matches) {
+        await processTemplateFile(match, template, args, featureName, sourcePath)
+      }
+    } else {
+      // Single file
+      await processTemplateFile(sourcePath, template, args, featureName)
+    }
+  }
+
+  async function processTemplateFile(
+    filePath: string,
+    template: InstallTemplate,
+    args: any,
+    featureName: string,
+    basePath?: string,
+  ) {
+    const { destination, context = {} } = template
+
+    // Calculate destination path
+    let destPath: string
+    if (basePath && fs.statSync(basePath).isDirectory()) {
+      // Preserve directory structure relative to base
+      let relativePath = path.relative(basePath, filePath)
+      // Remove .hbs extension
+      if (relativePath.endsWith('.hbs')) {
+        relativePath = relativePath.slice(0, -4)
+      }
+      destPath = path.join(projectDir, destination, relativePath)
+    } else {
+      // Direct destination for single files
+      let fileName = path.basename(filePath)
+      if (fileName.endsWith('.hbs')) {
+        fileName = fileName.slice(0, -4)
+      }
+      destPath = path.join(projectDir, destination)
+
+      // If destination doesn't include a file extension, treat it as directory
+      if (!path.extname(destination)) {
+        destPath = path.join(destPath, fileName)
+      }
+    }
+
+    // Render template with Handlebars
+    const templateSrc = await fsp.readFile(filePath, 'utf8')
+    const handlebarsTemplate = handlebars.compile(templateSrc)
+    const mergedContext = Object.assign({}, context, args)
+    const rendered = handlebarsTemplate(mergedContext)
+
+    // Ensure destination directory exists
+    const destDir = path.dirname(destPath)
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true })
+      logger.directoryCreated(featureName, destDir)
+    }
+
+    // Write rendered template
+    await fsp.writeFile(destPath, rendered, 'utf8')
+    logger.templateWritten(featureName, filePath, destPath)
   }
 
   // Helper to run code mods

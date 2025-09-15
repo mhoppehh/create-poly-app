@@ -24,7 +24,8 @@ export async function modPackageJsonApolloServer(sourceFile: SourceFile): Promis
   pkg.type = 'module'
   pkg.scripts = pkg.scripts || {}
   pkg.scripts.compile = 'tsc'
-  pkg.scripts.start = 'npm run compile && node ./dist/index.js'
+  pkg.scripts.build = 'tsc -b tsconfig.build.json'
+  pkg.scripts.dev = 'tsx watch --include "./src/**/*" ./src/index.ts'
 
   await fsp.writeFile(filePath, JSON.stringify(pkg, null, 2) + '\n', 'utf8')
 }

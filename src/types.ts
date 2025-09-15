@@ -4,11 +4,15 @@ import { SourceFile } from 'ts-morph'
 export type CodeMod = (sourceFile: SourceFile) => void
 
 export interface InstallTemplate {
+  // Source can be a single file, glob pattern, or directory
+  source: string
+  // Destination path
   destination: string
+  // Context for template rendering
   context?: any
 }
 
-export type InstallTemplates = Record<string, InstallTemplate>
+export type InstallTemplates = InstallTemplate[]
 
 export interface InstallScript {
   src: ((args: any) => string) | string
