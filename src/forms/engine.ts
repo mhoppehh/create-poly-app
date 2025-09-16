@@ -76,7 +76,23 @@ export class FormEngine {
 
   // Set answer for a question
   setAnswer(questionId: string, value: any): void {
-    this.state.answers[questionId] = value
+    const question = this.findQuestion(questionId)
+    if (!question) {
+      throw new Error(`Question with id ${questionId} not found`)
+    }
+
+    // For list questions, ensure value is an array
+    if (question.type === 'list') {
+      if (!Array.isArray(value)) {
+        // Initialize as empty array if not provided or not an array
+        this.state.answers[questionId] = value === undefined || value === null ? [] : [value]
+      } else {
+        this.state.answers[questionId] = value
+      }
+    } else {
+      this.state.answers[questionId] = value
+    }
+
     this.state.touched.add(questionId)
 
     if (this.options.validateOnChange) {
@@ -85,7 +101,7 @@ export class FormEngine {
 
     // Trigger answer change event
     if (this.events.onAnswerChange) {
-      this.events.onAnswerChange(questionId, value, this.getState())
+      this.events.onAnswerChange(questionId, this.state.answers[questionId], this.getState())
     }
 
     // Auto-save if enabled
@@ -99,6 +115,118 @@ export class FormEngine {
     return this.state.answers[questionId]
   }
 
+  // Add item to list question
+  addListItem(questionId: string, value: any): void {
+    const question = this.findQuestion(questionId)
+    if (!question || question.type !== 'list') {
+      throw new Error(`Question with id ${questionId} is not a list question`)
+    }
+
+    const currentValue = this.state.answers[questionId] || []
+    if (!Array.isArray(currentValue)) {
+      this.state.answers[questionId] = []
+    }
+
+    // Check max items constraint
+    const maxItems = question.listConfig?.maxItems
+    if (maxItems && currentValue.length >= maxItems) {
+      throw new Error(`Cannot add more than ${maxItems} items to ${question.title}`)
+    }
+
+    this.state.answers[questionId] = [...currentValue, value]
+    this.state.touched.add(questionId)
+
+    if (this.options.validateOnChange) {
+      this.validateQuestion(questionId)
+    }
+
+    // Trigger answer change event
+    if (this.events.onAnswerChange) {
+      this.events.onAnswerChange(questionId, this.state.answers[questionId], this.getState())
+    }
+
+    // Auto-save if enabled
+    if (this.options.autoSave) {
+      this.saveState()
+    }
+  }
+
+  // Remove item from list question
+  removeListItem(questionId: string, index: number): void {
+    const question = this.findQuestion(questionId)
+    if (!question || question.type !== 'list') {
+      throw new Error(`Question with id ${questionId} is not a list question`)
+    }
+
+    const currentValue = this.state.answers[questionId] || []
+    if (!Array.isArray(currentValue) || index < 0 || index >= currentValue.length) {
+      throw new Error(`Invalid index ${index} for list question ${questionId}`)
+    }
+
+    // Remove the item at the specified index
+    const newValue = currentValue.filter((_, i) => i !== index)
+    this.state.answers[questionId] = newValue
+    this.state.touched.add(questionId)
+
+    if (this.options.validateOnChange) {
+      this.validateQuestion(questionId)
+    }
+
+    // Trigger answer change event
+    if (this.events.onAnswerChange) {
+      this.events.onAnswerChange(questionId, newValue, this.getState())
+    }
+
+    // Auto-save if enabled
+    if (this.options.autoSave) {
+      this.saveState()
+    }
+  }
+
+  // Update specific item in list question
+  updateListItem(questionId: string, index: number, value: any): void {
+    const question = this.findQuestion(questionId)
+    if (!question || question.type !== 'list') {
+      throw new Error(`Question with id ${questionId} is not a list question`)
+    }
+
+    const currentValue = this.state.answers[questionId] || []
+    if (!Array.isArray(currentValue) || index < 0 || index >= currentValue.length) {
+      throw new Error(`Invalid index ${index} for list question ${questionId}`)
+    }
+
+    // Update the item at the specified index
+    const newValue = [...currentValue]
+    newValue[index] = value
+    this.state.answers[questionId] = newValue
+    this.state.touched.add(questionId)
+
+    if (this.options.validateOnChange) {
+      this.validateQuestion(questionId)
+    }
+
+    // Trigger answer change event
+    if (this.events.onAnswerChange) {
+      this.events.onAnswerChange(questionId, newValue, this.getState())
+    }
+
+    // Auto-save if enabled
+    if (this.options.autoSave) {
+      this.saveState()
+    }
+  }
+
+  // Get list item count
+  getListItemCount(questionId: string): number {
+    const question = this.findQuestion(questionId)
+    if (!question || question.type !== 'list') {
+      throw new Error(`Question with id ${questionId} is not a list question`)
+    }
+
+    const value = this.state.answers[questionId]
+    return Array.isArray(value) ? value.length : 0
+  }
+
   // Validate a specific question
   validateQuestion(questionId: string): ValidationResult {
     const question = this.findQuestion(questionId)
@@ -109,12 +237,18 @@ export class FormEngine {
     const value = this.state.answers[questionId]
     const errors: string[] = []
 
-    // Run validation rules
-    if (question.validation) {
-      for (const rule of question.validation) {
-        const error = this.runValidationRule(rule, value, question)
-        if (error) {
-          errors.push(error)
+    // Handle list questions
+    if (question.type === 'list') {
+      const listErrors = this.validateListQuestion(question, value)
+      errors.push(...listErrors)
+    } else {
+      // Run validation rules for non-list questions
+      if (question.validation) {
+        for (const rule of question.validation) {
+          const error = this.runValidationRule(rule, value, question)
+          if (error) {
+            errors.push(error)
+          }
         }
       }
     }
@@ -273,11 +407,155 @@ export class FormEngine {
     }
   }
 
+  private validateListQuestion(question: Question, value: any): string[] {
+    const errors: string[] = []
+
+    if (!question.listConfig) {
+      errors.push(`List question ${question.title} is missing list configuration`)
+      return errors
+    }
+
+    // Ensure value is an array
+    if (!Array.isArray(value)) {
+      if (question.required) {
+        errors.push(`${question.title} must have at least one item`)
+      }
+      return errors
+    }
+
+    // Validate list-level rules first
+    if (question.validation) {
+      for (const rule of question.validation) {
+        const error = this.runValidationRule(rule, value, question)
+        if (error) {
+          errors.push(error)
+        }
+      }
+    }
+
+    // Apply listConfig constraints
+    const { minItems, maxItems } = question.listConfig
+
+    if (minItems !== undefined && value.length < minItems) {
+      errors.push(`${question.title} must have at least ${minItems} items`)
+    }
+
+    if (maxItems !== undefined && value.length > maxItems) {
+      errors.push(`${question.title} must have no more than ${maxItems} items`)
+    }
+
+    // Validate each item in the list
+    const itemValidation = question.listConfig.itemValidation || []
+    for (let i = 0; i < value.length; i++) {
+      const itemValue = value[i]
+
+      // Create a virtual question for the item to reuse existing validation logic
+      const itemQuestion: Question = {
+        id: `${question.id}_item_${i}`,
+        type: question.listConfig.itemType,
+        title: `${question.title} Item ${i + 1}`,
+        required: question.required || false, // Items inherit required from parent
+        validation: itemValidation,
+        ...(question.listConfig.itemOptions && { options: question.listConfig.itemOptions }),
+        ...(question.listConfig.itemProps && { props: question.listConfig.itemProps }),
+      }
+
+      // Validate the individual item
+      for (const rule of itemValidation) {
+        const error = this.runValidationRule(rule, itemValue, itemQuestion)
+        if (error) {
+          errors.push(`Item ${i + 1}: ${error}`)
+        }
+      }
+
+      // Apply type-specific validation for the item
+      const itemErrors = this.validateItemByType(itemQuestion, itemValue)
+      errors.push(...itemErrors.map(err => `Item ${i + 1}: ${err}`))
+    }
+
+    return errors
+  }
+
+  private validateItemByType(itemQuestion: Question, value: any): string[] {
+    const errors: string[] = []
+
+    // Apply basic type validation based on item type
+    switch (itemQuestion.type) {
+      case 'email':
+        if (value && typeof value === 'string') {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+          if (!emailRegex.test(value)) {
+            errors.push(`must be a valid email address`)
+          }
+        }
+        break
+
+      case 'url':
+        if (value && typeof value === 'string') {
+          try {
+            new URL(value)
+          } catch {
+            errors.push(`must be a valid URL`)
+          }
+        }
+        break
+
+      case 'number':
+        if (value !== undefined && value !== null && value !== '' && isNaN(Number(value))) {
+          errors.push(`must be a valid number`)
+        }
+        break
+
+      case 'boolean':
+      case 'toggle':
+        if (value !== undefined && typeof value !== 'boolean') {
+          errors.push(`must be true or false`)
+        }
+        break
+
+      case 'select':
+        if (value && itemQuestion.options) {
+          const validValues = itemQuestion.options.map(opt => opt.value)
+          if (!validValues.includes(value)) {
+            errors.push(`must be one of: ${validValues.join(', ')}`)
+          }
+        }
+        break
+
+      case 'multiselect':
+        if (value && Array.isArray(value) && itemQuestion.options) {
+          const validValues = itemQuestion.options.map(opt => opt.value)
+          const invalidValues = value.filter(v => !validValues.includes(v))
+          if (invalidValues.length > 0) {
+            errors.push(`contains invalid values: ${invalidValues.join(', ')}`)
+          }
+        }
+        break
+
+      case 'date':
+        if (value && typeof value === 'string') {
+          const date = new Date(value)
+          if (isNaN(date.getTime())) {
+            errors.push(`must be a valid date`)
+          }
+        }
+        break
+    }
+
+    return errors
+  }
+
   private runValidationRule(rule: ValidationRule, value: any, question: Question): string | null {
     switch (rule.type) {
       case 'required':
-        if (question.required && (value === undefined || value === null || value === '')) {
-          return rule.message || `${question.title} is required`
+        if (question.required) {
+          if (question.type === 'list') {
+            if (!Array.isArray(value) || value.length === 0) {
+              return rule.message || `${question.title} must have at least one item`
+            }
+          } else if (value === undefined || value === null || value === '') {
+            return rule.message || `${question.title} is required`
+          }
         }
         break
 
@@ -302,6 +580,18 @@ export class FormEngine {
       case 'max':
         if (typeof value === 'number' && value > rule.value) {
           return rule.message || `${question.title} must be no more than ${rule.value}`
+        }
+        break
+
+      case 'minItems':
+        if (Array.isArray(value) && value.length < rule.value) {
+          return rule.message || `${question.title} must have at least ${rule.value} items`
+        }
+        break
+
+      case 'maxItems':
+        if (Array.isArray(value) && value.length > rule.value) {
+          return rule.message || `${question.title} must have no more than ${rule.value} items`
         }
         break
 

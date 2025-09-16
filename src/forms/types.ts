@@ -11,6 +11,7 @@ export type QuestionType =
   | 'email'
   | 'password'
   | 'url'
+  | 'list'
 
 export type ValidationRule =
   | { type: 'required'; message?: string }
@@ -21,12 +22,43 @@ export type ValidationRule =
   | { type: 'pattern'; value: RegExp; message?: string }
   | { type: 'email'; message?: string }
   | { type: 'url'; message?: string }
+  | { type: 'minItems'; value: number; message?: string }
+  | { type: 'maxItems'; value: number; message?: string }
   | { type: 'custom'; validator: (value: any) => boolean | string; message?: string }
 
 export interface SelectOption {
   label: string
   value: string | number | boolean
   description?: string
+}
+
+export interface ListConfig {
+  // The type of items in the list (any existing question type except 'list')
+  itemType: Exclude<QuestionType, 'list'>
+
+  // Minimum number of items required
+  minItems?: number
+
+  // Maximum number of items allowed
+  maxItems?: number
+
+  // Options for select/multiselect item types
+  itemOptions?: SelectOption[]
+
+  // Validation rules that apply to each item in the list
+  itemValidation?: ValidationRule[]
+
+  // Additional properties for the item type
+  itemProps?: Record<string, any>
+
+  // Placeholder for new items
+  itemPlaceholder?: string
+
+  // Label for add button
+  addLabel?: string
+
+  // Label for remove button
+  removeLabel?: string
 }
 
 export interface ConditionalRule {
@@ -55,6 +87,9 @@ export interface Question {
 
   // For select/multiselect types
   options?: SelectOption[]
+
+  // For list type questions
+  listConfig?: ListConfig
 
   // Validation rules
   validation?: ValidationRule[]
