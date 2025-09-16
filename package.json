@@ -11,7 +11,9 @@
     "build": "rollup -c",
     "type-check": "tsc --noEmit",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "format:fix": "prettier --write ."
+    "format:fix": "prettier --write .",
+    "demo:forms": "tsx src/scripts/demo-forms.ts",
+    "demo:forms:meta": "tsx src/scripts/form-builder-demo.ts"
   },
   "keywords": [],
   "author": "",

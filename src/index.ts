@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-import prompts from 'prompts'
 import path from 'path'
 import { scaffoldProject } from './engine'
 import { createLogger } from './logger'
 import { loadLoggingConfig } from './config'
+import { runForm } from './forms'
+import { createPolyAppForm } from './forms/definitions'
 
 async function main() {
   // Initialize logger with configuration
@@ -17,32 +18,66 @@ async function main() {
 
   logger.infoFileOnly('main', 'Starting create-poly-app')
 
-  const response = await prompts([
-    {
-      type: 'text',
-      name: 'projectName',
-      message: 'What is the name of your project?',
-      initial: 'my-awesome-project',
-    },
-    {
-      type: 'toggle',
-      name: 'includeGraphQLServer',
-      message: 'Do you want to include a basic GraphQL server?',
-      initial: true,
-      active: 'yes',
-      inactive: 'no',
-    },
-    // ... more questions for React vs React Native, etc.
-  ])
-
-  logger.infoFileOnly('main', 'User choices: %o', response)
-  const projectPath = path.resolve(process.cwd(), response.projectName)
-  logger.infoFileOnly('main', 'Project will be created at: %s', projectPath)
-
   try {
-    await scaffoldProject(response.projectName, projectPath, ['projectDir', 'vite', 'tailwind', 'apollo-server'])
+    // Use the new form system
+    const answers = await runForm(createPolyAppForm, {
+      validateOnChange: true,
+      autoSave: true,
+      saveKey: 'create-poly-app-state',
+    })
+
+    logger.infoFileOnly('main', 'User choices: %o', answers)
+
+    // Extract project details
+    const projectName = answers.projectName
+    const projectPath = path.resolve(process.cwd(), projectName)
+    logger.infoFileOnly('main', 'Project will be created at: %s', projectPath)
+
+    // Build feature list based on user selections
+    const features = ['projectDir']
+
+    if (answers.includeFrontend) {
+      features.push('vite')
+      if (answers.includeTailwind) {
+        features.push('tailwind')
+      }
+    }
+
+    if (answers.includeGraphQLServer) {
+      features.push('apollo-server')
+    }
+
+    console.log('\n🎯 Creating project with features:', features.join(', '))
+
+    await scaffoldProject(projectName, projectPath, features)
+
+    console.log(`\n✅ Project "${projectName}" created successfully!`)
+    console.log(`📁 Location: ${projectPath}`)
+    console.log('\n🚀 Next steps:')
+    console.log(`   cd ${projectName}`)
+
+    if (answers.packageManager === 'pnpm') {
+      console.log('   pnpm install')
+      if (answers.includeFrontend) {
+        console.log('   pnpm dev  # Start the frontend')
+      }
+      if (answers.includeGraphQLServer) {
+        console.log('   pnpm --filter=api dev  # Start the API server')
+      }
+    } else if (answers.packageManager === 'yarn') {
+      console.log('   yarn install')
+      if (answers.includeFrontend) {
+        console.log('   yarn dev  # Start the frontend')
+      }
+    } else {
+      console.log('   npm install')
+      if (answers.includeFrontend) {
+        console.log('   npm run dev  # Start the frontend')
+      }
+    }
   } catch (error) {
     logger.error('main', 'Project creation failed: %s', error)
+    console.error('❌ Project creation failed:', error)
     process.exit(1)
   }
 }
