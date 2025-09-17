@@ -1,11 +1,16 @@
 import { modPackageJsonPrisma } from './codemods/prisma-package-json-mod'
 import type { Feature } from '../../types'
+import { ActivationConditions, ActivationRules } from '../../forms/feature-selector'
 
 export const prisma: Feature = {
   id: 'prisma',
   description: 'Database ORM with schema management and type-safe client generation',
   name: 'Prisma ORM',
   dependsOn: ['apollo-server'],
+  activatedBy: ActivationRules.and(
+    ActivationConditions.includesValue('projectWorkspaces', 'graphql-server'),
+    ActivationConditions.includesValue('apiFeatures', 'database'),
+  ),
   stages: [
     {
       name: 'install-prisma-dependencies',

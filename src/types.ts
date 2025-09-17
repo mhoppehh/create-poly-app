@@ -1,8 +1,6 @@
-
 export type CodeMod = (filePath: string) => void | Promise<void>
 
 export interface InstallTemplate {
-
   source: string
 
   destination: string
@@ -24,12 +22,29 @@ export interface FeatureStage {
   mods?: Record<string, CodeMod[]>
 }
 
+export interface FeatureActivationCondition {
+  questionId: string
+  condition:
+    | { type: 'equals'; value: any }
+    | { type: 'includes'; value: any }
+    | { type: 'contains'; value: any }
+    | { type: 'in'; values: any[] }
+    | { type: 'custom'; evaluator: (value: any, allAnswers: Record<string, any>) => boolean }
+}
+
+export interface FeatureActivationRule {
+  type: 'and' | 'or'
+  conditions: (FeatureActivationCondition | FeatureActivationRule)[]
+}
+
 export interface Feature {
   id: string
   name: string
   description: string
 
   dependsOn?: string[]
+
+  activatedBy?: FeatureActivationRule | FeatureActivationCondition
 
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>

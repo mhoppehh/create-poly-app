@@ -1,12 +1,14 @@
 import { modPackageJsonApolloServer } from './codemods/mod-package-json-api'
 import { addApiToPnpmWorkspace } from './codemods/add-api-to-pnpm-workspace'
 import type { Feature } from '../../types'
+import { ActivationConditions } from '../../forms/feature-selector'
 
 export const apolloServer: Feature = {
   id: 'apollo-server',
   description: 'A GraphQL Server for React',
   name: 'Apollo Server',
   dependsOn: ['projectDir'],
+  activatedBy: ActivationConditions.includesValue('projectWorkspaces', 'graphql-server'),
   stages: [
     {
       name: 'setup-api-structure',

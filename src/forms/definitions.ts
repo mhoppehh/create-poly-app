@@ -65,7 +65,7 @@ export const createPolyAppForm: Form = {
               description: 'A React Native mobile application',
             },
           ],
-          defaultValue: ['react-frontend', 'graphql-server'],
+          defaultValue: ['react-webapp', 'graphql-server'],
         },
       ],
     },

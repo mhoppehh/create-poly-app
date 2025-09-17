@@ -5,6 +5,7 @@ import { createLogger } from './logger'
 import { loadLoggingConfig } from './config'
 import { runForm } from './forms'
 import { createPolyAppForm } from './forms/definitions'
+import { selectFeaturesFromAnswers } from './forms/feature-selector'
 
 async function main() {
   const loggingConfig = loadLoggingConfig()
@@ -30,23 +31,8 @@ async function main() {
     const projectPath = path.resolve(process.cwd(), projectName)
     logger.infoFileOnly('main', 'Project will be created at: %s', projectPath)
 
-    const features = ['projectDir']
-    const workspaces = answers.projectWorkspaces || []
-
-    if (workspaces.includes('react-webapp')) {
-      features.push('vite')
-      if (answers.includeTailwind) {
-        features.push('tailwind')
-      }
-    }
-
-    if (workspaces.includes('graphql-server')) {
-      features.push('apollo-server')
-
-      if (answers.apiFeatures && answers.apiFeatures.includes('database')) {
-        features.push('prisma')
-      }
-    }
+    const features = selectFeaturesFromAnswers(answers)
+    logger.infoFileOnly('main', 'Selected features: %o', features)
 
     console.log('\n🎯 Creating project with features:', features.join(', '))
 
@@ -58,15 +44,15 @@ async function main() {
     console.log(`   cd ${projectName}`)
     console.log('   pnpm install')
 
-    if (workspaces.includes('react-webapp')) {
+    if (features.includes('vite')) {
       console.log('   pnpm dev  # Start the frontend')
     }
 
-    if (workspaces.includes('graphql-server')) {
+    if (features.includes('apollo-server')) {
       console.log('   pnpm --filter=api dev  # Start the API server')
     }
 
-    if (answers.apiFeatures && answers.apiFeatures.includes('database')) {
+    if (features.includes('prisma')) {
       console.log('\n📊 Database Setup (Prisma):')
       console.log('   1. Update your DATABASE_URL in api/.env')
       console.log('   2. Run database migrations:')
