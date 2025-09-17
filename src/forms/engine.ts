@@ -35,23 +35,19 @@ export class FormEngine {
       touched: new Set(),
     }
 
-    // Load saved state if autoSave is enabled
     if (this.options.autoSave && this.options.saveKey) {
       this.loadState()
     }
   }
 
-  // Get current form state
   getState(): FormState {
     return { ...this.state }
   }
 
-  // Get all visible groups based on current answers
   getVisibleGroups(): QuestionGroup[] {
     return this.form.groups.filter(group => this.shouldShowElement(group.showIf))
   }
 
-  // Get visible questions for a specific group
   getVisibleQuestions(groupId: string): Question[] {
     const group = this.form.groups.find(g => g.id === groupId)
     if (!group) throw new Error(`Group with id ${groupId} not found`)
@@ -59,7 +55,6 @@ export class FormEngine {
     return group.questions.filter(question => this.shouldShowElement(question.showIf))
   }
 
-  // Get questions for current group
   getCurrentQuestions(): Question[] {
     const visibleGroups = this.getVisibleGroups()
     if (this.state.currentGroupIndex >= visibleGroups.length) {
@@ -74,17 +69,15 @@ export class FormEngine {
     return this.getVisibleQuestions(currentGroup.id)
   }
 
-  // Set answer for a question
   setAnswer(questionId: string, value: any): void {
     const question = this.findQuestion(questionId)
     if (!question) {
       throw new Error(`Question with id ${questionId} not found`)
     }
 
-    // For list questions, ensure value is an array
     if (question.type === 'list') {
       if (!Array.isArray(value)) {
-        // Initialize as empty array if not provided or not an array
+
         this.state.answers[questionId] = value === undefined || value === null ? [] : [value]
       } else {
         this.state.answers[questionId] = value
@@ -99,23 +92,19 @@ export class FormEngine {
       this.validateQuestion(questionId)
     }
 
-    // Trigger answer change event
     if (this.events.onAnswerChange) {
       this.events.onAnswerChange(questionId, this.state.answers[questionId], this.getState())
     }
 
-    // Auto-save if enabled
     if (this.options.autoSave) {
       this.saveState()
     }
   }
 
-  // Get answer for a question
   getAnswer(questionId: string): any {
     return this.state.answers[questionId]
   }
 
-  // Add item to list question
   addListItem(questionId: string, value: any): void {
     const question = this.findQuestion(questionId)
     if (!question || question.type !== 'list') {
@@ -127,7 +116,6 @@ export class FormEngine {
       this.state.answers[questionId] = []
     }
 
-    // Check max items constraint
     const maxItems = question.listConfig?.maxItems
     if (maxItems && currentValue.length >= maxItems) {
       throw new Error(`Cannot add more than ${maxItems} items to ${question.title}`)
@@ -140,18 +128,15 @@ export class FormEngine {
       this.validateQuestion(questionId)
     }
 
-    // Trigger answer change event
     if (this.events.onAnswerChange) {
       this.events.onAnswerChange(questionId, this.state.answers[questionId], this.getState())
     }
 
-    // Auto-save if enabled
     if (this.options.autoSave) {
       this.saveState()
     }
   }
 
-  // Remove item from list question
   removeListItem(questionId: string, index: number): void {
     const question = this.findQuestion(questionId)
     if (!question || question.type !== 'list') {
@@ -163,7 +148,6 @@ export class FormEngine {
       throw new Error(`Invalid index ${index} for list question ${questionId}`)
     }
 
-    // Remove the item at the specified index
     const newValue = currentValue.filter((_, i) => i !== index)
     this.state.answers[questionId] = newValue
     this.state.touched.add(questionId)
@@ -172,18 +156,15 @@ export class FormEngine {
       this.validateQuestion(questionId)
     }
 
-    // Trigger answer change event
     if (this.events.onAnswerChange) {
       this.events.onAnswerChange(questionId, newValue, this.getState())
     }
 
-    // Auto-save if enabled
     if (this.options.autoSave) {
       this.saveState()
     }
   }
 
-  // Update specific item in list question
   updateListItem(questionId: string, index: number, value: any): void {
     const question = this.findQuestion(questionId)
     if (!question || question.type !== 'list') {
@@ -195,7 +176,6 @@ export class FormEngine {
       throw new Error(`Invalid index ${index} for list question ${questionId}`)
     }
 
-    // Update the item at the specified index
     const newValue = [...currentValue]
     newValue[index] = value
     this.state.answers[questionId] = newValue
@@ -205,18 +185,15 @@ export class FormEngine {
       this.validateQuestion(questionId)
     }
 
-    // Trigger answer change event
     if (this.events.onAnswerChange) {
       this.events.onAnswerChange(questionId, newValue, this.getState())
     }
 
-    // Auto-save if enabled
     if (this.options.autoSave) {
       this.saveState()
     }
   }
 
-  // Get list item count
   getListItemCount(questionId: string): number {
     const question = this.findQuestion(questionId)
     if (!question || question.type !== 'list') {
@@ -227,7 +204,6 @@ export class FormEngine {
     return Array.isArray(value) ? value.length : 0
   }
 
-  // Validate a specific question
   validateQuestion(questionId: string): ValidationResult {
     const question = this.findQuestion(questionId)
     if (!question) {
@@ -237,12 +213,11 @@ export class FormEngine {
     const value = this.state.answers[questionId]
     const errors: string[] = []
 
-    // Handle list questions
     if (question.type === 'list') {
       const listErrors = this.validateListQuestion(question, value)
       errors.push(...listErrors)
     } else {
-      // Run validation rules for non-list questions
+
       if (question.validation) {
         for (const rule of question.validation) {
           const error = this.runValidationRule(rule, value, question)
@@ -253,7 +228,6 @@ export class FormEngine {
       }
     }
 
-    // Update state
     if (errors.length > 0) {
       this.state.errors[questionId] = errors
     } else {
@@ -265,7 +239,6 @@ export class FormEngine {
       errors: { [questionId]: errors },
     }
 
-    // Trigger validation event
     if (this.events.onQuestionValidate) {
       this.events.onQuestionValidate(questionId, result)
     }
@@ -273,7 +246,6 @@ export class FormEngine {
     return result
   }
 
-  // Validate all visible questions in current group
   validateCurrentGroup(): ValidationResult {
     const questions = this.getCurrentQuestions()
     const allErrors: Record<string, string[]> = {}
@@ -290,7 +262,6 @@ export class FormEngine {
     return { isValid, errors: allErrors }
   }
 
-  // Move to next group
   next(): boolean {
     const validation = this.validateCurrentGroup()
     if (!validation.isValid) {
@@ -311,7 +282,7 @@ export class FormEngine {
       }
       return true
     } else {
-      // Form is complete
+
       this.state.isComplete = true
       if (this.events.onFormComplete) {
         this.events.onFormComplete(this.getState())
@@ -320,7 +291,6 @@ export class FormEngine {
     }
   }
 
-  // Move to previous group
   previous(): boolean {
     if (this.state.currentGroupIndex > 0) {
       this.state.currentGroupIndex--
@@ -332,17 +302,14 @@ export class FormEngine {
     return false
   }
 
-  // Check if can go to next group
   canGoNext(): boolean {
     return this.validateCurrentGroup().isValid
   }
 
-  // Check if can go to previous group
   canGoPrevious(): boolean {
     return this.state.currentGroupIndex > 0 && this.form.settings?.allowBack !== false
   }
 
-  // Reset form state
   reset(): void {
     this.state = {
       formId: this.form.id,
@@ -358,14 +325,12 @@ export class FormEngine {
     }
   }
 
-  // Cancel form
   cancel(): void {
     if (this.events.onFormCancel) {
       this.events.onFormCancel(this.getState())
     }
   }
 
-  // Private helper methods
   private findQuestion(questionId: string): Question | undefined {
     for (const group of this.form.groups) {
       const question = group.questions.find(q => q.id === questionId)
@@ -415,7 +380,6 @@ export class FormEngine {
       return errors
     }
 
-    // Ensure value is an array
     if (!Array.isArray(value)) {
       if (question.required) {
         errors.push(`${question.title} must have at least one item`)
@@ -423,7 +387,6 @@ export class FormEngine {
       return errors
     }
 
-    // Validate list-level rules first
     if (question.validation) {
       for (const rule of question.validation) {
         const error = this.runValidationRule(rule, value, question)
@@ -433,7 +396,6 @@ export class FormEngine {
       }
     }
 
-    // Apply listConfig constraints
     const { minItems, maxItems } = question.listConfig
 
     if (minItems !== undefined && value.length < minItems) {
@@ -444,23 +406,20 @@ export class FormEngine {
       errors.push(`${question.title} must have no more than ${maxItems} items`)
     }
 
-    // Validate each item in the list
     const itemValidation = question.listConfig.itemValidation || []
     for (let i = 0; i < value.length; i++) {
       const itemValue = value[i]
 
-      // Create a virtual question for the item to reuse existing validation logic
       const itemQuestion: Question = {
         id: `${question.id}_item_${i}`,
         type: question.listConfig.itemType,
         title: `${question.title} Item ${i + 1}`,
-        required: question.required || false, // Items inherit required from parent
+        required: question.required || false,
         validation: itemValidation,
         ...(question.listConfig.itemOptions && { options: question.listConfig.itemOptions }),
         ...(question.listConfig.itemProps && { props: question.listConfig.itemProps }),
       }
 
-      // Validate the individual item
       for (const rule of itemValidation) {
         const error = this.runValidationRule(rule, itemValue, itemQuestion)
         if (error) {
@@ -468,7 +427,6 @@ export class FormEngine {
         }
       }
 
-      // Apply type-specific validation for the item
       const itemErrors = this.validateItemByType(itemQuestion, itemValue)
       errors.push(...itemErrors.map(err => `Item ${i + 1}: ${err}`))
     }
@@ -479,7 +437,6 @@ export class FormEngine {
   private validateItemByType(itemQuestion: Question, value: any): string[] {
     const errors: string[] = []
 
-    // Apply basic type validation based on item type
     switch (itemQuestion.type) {
       case 'email':
         if (value && typeof value === 'string') {
@@ -653,7 +610,7 @@ export class FormEngine {
           }
         }
       } catch (error) {
-        // Ignore loading errors
+
         console.warn('Failed to load form state:', error)
       }
     }

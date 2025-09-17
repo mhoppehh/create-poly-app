@@ -1,11 +1,8 @@
 import * as fs from 'fs'
 import * as fsp from 'fs/promises'
 import * as path from 'path'
-import { SourceFile } from 'ts-morph'
 
-export async function modPackageJsonApolloServer(sourceFile: SourceFile): Promise<void> {
-  const filePath = sourceFile.getFilePath()
-
+export async function modPackageJsonApolloServer(filePath: string): Promise<void> {
   const dir = path.dirname(filePath)
   if (!fs.existsSync(dir)) {
     await fsp.mkdir(dir, { recursive: true })

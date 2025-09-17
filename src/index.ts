@@ -7,7 +7,6 @@ import { runForm } from './forms'
 import { createPolyAppForm } from './forms/definitions'
 
 async function main() {
-  // Initialize logger with configuration
   const loggingConfig = loadLoggingConfig()
   const logger = createLogger({
     logLevel: loggingConfig.level,
@@ -19,7 +18,6 @@ async function main() {
   logger.infoFileOnly('main', 'Starting create-poly-app')
 
   try {
-    // Use the new form system
     const answers = await runForm(createPolyAppForm, {
       validateOnChange: true,
       autoSave: true,
@@ -28,12 +26,10 @@ async function main() {
 
     logger.infoFileOnly('main', 'User choices: %o', answers)
 
-    // Extract project details
     const projectName = answers.projectName
     const projectPath = path.resolve(process.cwd(), projectName)
     logger.infoFileOnly('main', 'Project will be created at: %s', projectPath)
 
-    // Build feature list based on user selections
     const features = ['projectDir']
 
     if (answers.includeFrontend) {
@@ -45,6 +41,10 @@ async function main() {
 
     if (answers.includeGraphQLServer) {
       features.push('apollo-server')
+
+      if (answers.apiFeatures && answers.apiFeatures.includes('database')) {
+        features.push('prisma')
+      }
     }
 
     console.log('\n🎯 Creating project with features:', features.join(', '))
@@ -72,7 +72,22 @@ async function main() {
     } else {
       console.log('   npm install')
       if (answers.includeFrontend) {
-        console.log('   npm run dev  # Start the frontend')
+        console.log('   pnpm dev  # Start the frontend')
+      }
+    }
+
+    if (answers.apiFeatures && answers.apiFeatures.includes('database')) {
+      console.log('\n📊 Database Setup (Prisma):')
+      console.log('   1. Update your DATABASE_URL in api/.env')
+      console.log('   2. Run database migrations:')
+      if (answers.packageManager === 'pnpm') {
+        console.log('      pnpm --filter=api prisma:push    # Push schema to database')
+        console.log('      pnpm --filter=api prisma:seed    # Seed with sample data')
+        console.log('      pnpm --filter=api prisma:studio  # Open Prisma Studio')
+      } else {
+        console.log('      cd api && pnpm prisma:push    # Push schema to database')
+        console.log('      cd api && pnpm prisma:seed    # Seed with sample data')
+        console.log('      cd api && pnpm prisma:studio  # Open Prisma Studio')
       }
     }
   } catch (error) {

@@ -1,10 +1,7 @@
 import * as fs from 'fs'
-import { SourceFile } from 'ts-morph'
 import { parse, stringify } from 'yaml'
 
-export function addApiToPnpmWorkspace(sourceFile: SourceFile): void {
-  const filePath = sourceFile.getFilePath()
-
+export function addApiToPnpmWorkspace(filePath: string): void {
   const file = fs.readFileSync(filePath, 'utf8')
 
   const data = parse(file) as any

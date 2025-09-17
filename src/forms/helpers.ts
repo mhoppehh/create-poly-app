@@ -1,8 +1,5 @@
-import { Form, Question, QuestionGroup, SelectOption, ValidationRule, ConditionalRule } from './types'
+import { Form, Question, QuestionGroup, SelectOption, ValidationRule, ConditionalRule, QuestionType } from './types'
 
-/**
- * Form Builder utility class for creating forms programmatically
- */
 export class FormBuilder {
   private form: Partial<Form>
   private currentGroup: Partial<QuestionGroup> | null = null
@@ -15,27 +12,17 @@ export class FormBuilder {
     }
   }
 
-  /**
-   * Set form description
-   */
   description(description: string): FormBuilder {
     this.form.description = description
     return this
   }
 
-  /**
-   * Set form settings
-   */
   settings(settings: NonNullable<Form['settings']>): FormBuilder {
     this.form.settings = settings
     return this
   }
 
-  /**
-   * Start a new question group
-   */
   group(id: string, title?: string, description?: string): FormBuilder {
-    // Save current group if exists
     if (this.currentGroup) {
       this.form.groups!.push(this.currentGroup as QuestionGroup)
     }
@@ -49,9 +36,6 @@ export class FormBuilder {
     return this
   }
 
-  /**
-   * Set conditional rules for current group
-   */
   groupShowIf(conditions: ConditionalRule[]): FormBuilder {
     if (!this.currentGroup) {
       throw new Error('No group started. Call group() first.')
@@ -60,28 +44,21 @@ export class FormBuilder {
     return this
   }
 
-  /**
-   * Add a question to the current group
-   */
-  question(question: Partial<Question> & { id: string; type: Question['type']; title: string }): FormBuilder {
+  question(question: Partial<Question>): FormBuilder {
     if (!this.currentGroup) {
       throw new Error('No group started. Call group() first.')
     }
 
-    const fullQuestion: Question = {
+    const fullQuestion = {
       required: false,
       ...question,
-    }
+    } as Question
 
     this.currentGroup.questions!.push(fullQuestion)
     return this
   }
 
-  /**
-   * Build and return the complete form
-   */
   build(): Form {
-    // Save current group if exists
     if (this.currentGroup) {
       this.form.groups!.push(this.currentGroup as QuestionGroup)
       this.currentGroup = null
@@ -91,34 +68,17 @@ export class FormBuilder {
   }
 }
 
-/**
- * Helper functions for common question types and validation rules
- */
 export const QuestionHelpers = {
-  /**
-   * Create a text question
-   */
-  text(
-    id: string,
-    title: string,
-    options: Partial<Question> = {},
-  ): Partial<Question> & { id: string; type: 'text'; title: string } {
+  text(id: string, title: string, options: Partial<Question> = {}): Partial<Question> {
     return {
       id,
-      type: 'text',
+      type: 'text' as QuestionType,
       title,
       ...options,
     }
   },
 
-  /**
-   * Create a number question
-   */
-  number(
-    id: string,
-    title: string,
-    options: Partial<Question> = {},
-  ): Partial<Question> & { id: string; type: 'number'; title: string } {
+  number(id: string, title: string, options: Partial<Question> = {}): Partial<Question> {
     return {
       id,
       type: 'number',
@@ -127,14 +87,7 @@ export const QuestionHelpers = {
     }
   },
 
-  /**
-   * Create a boolean/toggle question
-   */
-  toggle(
-    id: string,
-    title: string,
-    options: Partial<Question> = {},
-  ): Partial<Question> & { id: string; type: 'toggle'; title: string } {
+  toggle(id: string, title: string, options: Partial<Question> = {}): Partial<Question> {
     return {
       id,
       type: 'toggle',
@@ -143,15 +96,12 @@ export const QuestionHelpers = {
     }
   },
 
-  /**
-   * Create a select question
-   */
   select(
     id: string,
     title: string,
     options: SelectOption[],
     questionOptions: Partial<Question> = {},
-  ): Partial<Question> & { id: string; type: 'select'; title: string } {
+  ): Partial<Question> {
     return {
       id,
       type: 'select',
@@ -161,15 +111,12 @@ export const QuestionHelpers = {
     }
   },
 
-  /**
-   * Create a multiselect question
-   */
   multiselect(
     id: string,
     title: string,
     options: SelectOption[],
     questionOptions: Partial<Question> = {},
-  ): Partial<Question> & { id: string; type: 'multiselect'; title: string } {
+  ): Partial<Question> {
     return {
       id,
       type: 'multiselect',
@@ -180,9 +127,6 @@ export const QuestionHelpers = {
   },
 }
 
-/**
- * Helper functions for validation rules
- */
 export const ValidationHelpers = {
   required(message?: string): ValidationRule {
     return message ? { type: 'required', message } : { type: 'required' }
@@ -221,9 +165,6 @@ export const ValidationHelpers = {
   },
 }
 
-/**
- * Helper functions for conditional rules
- */
 export const ConditionalHelpers = {
   equals(dependsOn: string, value: any): ConditionalRule {
     return { dependsOn, condition: { type: 'equals', value } }
@@ -258,13 +199,7 @@ export const ConditionalHelpers = {
   },
 }
 
-/**
- * Create common select options
- */
 export const OptionHelpers = {
-  /**
-   * Yes/No options
-   */
   yesNo(): SelectOption[] {
     return [
       { label: 'Yes', value: true },
@@ -272,9 +207,6 @@ export const OptionHelpers = {
     ]
   },
 
-  /**
-   * Package manager options
-   */
   packageManagers(): SelectOption[] {
     return [
       { label: 'pnpm (recommended)', value: 'pnpm', description: 'Fast, disk space efficient' },
@@ -283,9 +215,6 @@ export const OptionHelpers = {
     ]
   },
 
-  /**
-   * Experience level options
-   */
   experienceLevels(): SelectOption[] {
     return [
       { label: 'Beginner (0-1 years)', value: 'beginner' },
@@ -295,9 +224,6 @@ export const OptionHelpers = {
     ]
   },
 
-  /**
-   * Framework options
-   */
   frontendFrameworks(): SelectOption[] {
     return [
       { label: 'React', value: 'react', description: 'A JavaScript library for building user interfaces' },

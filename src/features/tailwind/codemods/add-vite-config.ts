@@ -5,10 +5,13 @@ import {
   PropertyAssignment,
   SyntaxKind,
   Node,
-  SourceFile,
+  Project,
 } from 'ts-morph'
 
-export function addViteConfig(sourceFile: SourceFile): void {
+export async function addViteConfig(filePath: string): Promise<void> {
+  const project = new Project()
+  const sourceFile = project.addSourceFileAtPath(filePath)
+
   const importModule = '@tailwindcss/vite'
   const importName = 'tailwindcss'
 
@@ -62,4 +65,6 @@ export function addViteConfig(sourceFile: SourceFile): void {
 
     break
   }
+
+  await project.save()
 }

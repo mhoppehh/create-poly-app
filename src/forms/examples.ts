@@ -1,8 +1,5 @@
 import { FormBuilder, QuestionHelpers, ValidationHelpers, ConditionalHelpers, OptionHelpers } from './helpers'
 
-/**
- * Example showing how to use the FormBuilder to create the same createPolyAppForm
- */
 export const createPolyAppFormUsingBuilder = new FormBuilder('create-poly-app-builder', '🚀 Create Poly App')
   .description("Let's set up your new polyglot project with the features you need.")
   .settings({
@@ -12,7 +9,6 @@ export const createPolyAppFormUsingBuilder = new FormBuilder('create-poly-app-bu
     cancelLabel: 'Cancel',
   })
 
-  // Project basics group
   .group('project-basics', 'Project Setup', 'Tell us about your project')
   .question(
     QuestionHelpers.text('projectName', 'What is the name of your project?', {
@@ -37,7 +33,6 @@ export const createPolyAppFormUsingBuilder = new FormBuilder('create-poly-app-bu
     }),
   )
 
-  // Frontend setup group
   .group('frontend-setup', 'Frontend Configuration', 'Choose your frontend setup')
   .question(
     QuestionHelpers.toggle('includeFrontend', 'Do you want to include a frontend application?', {
@@ -55,7 +50,6 @@ export const createPolyAppFormUsingBuilder = new FormBuilder('create-poly-app-bu
     }),
   )
 
-  // Backend setup group
   .group('backend-setup', 'Backend Configuration', 'Choose your backend setup')
   .question(
     QuestionHelpers.toggle('includeGraphQLServer', 'Do you want to include a GraphQL API server?', {
@@ -65,7 +59,6 @@ export const createPolyAppFormUsingBuilder = new FormBuilder('create-poly-app-bu
     }),
   )
 
-  // API features group (conditional)
   .group('api-features', 'API Features', 'Configure your GraphQL API features')
   .groupShowIf([ConditionalHelpers.equals('includeGraphQLServer', true)])
   .question(
@@ -100,7 +93,6 @@ export const createPolyAppFormUsingBuilder = new FormBuilder('create-poly-app-bu
     }),
   )
 
-  // Development setup group
   .group('development-setup', 'Development Environment', 'Configure your development environment')
   .question(
     QuestionHelpers.select('packageManager', 'Which package manager do you prefer?', OptionHelpers.packageManagers(), {
@@ -129,9 +121,6 @@ export const createPolyAppFormUsingBuilder = new FormBuilder('create-poly-app-bu
   )
   .build()
 
-/**
- * Example of a simple contact form
- */
 export const contactForm = new FormBuilder('contact', 'Contact Us')
   .description('Get in touch with our team')
 
@@ -216,9 +205,6 @@ export const contactForm = new FormBuilder('contact', 'Contact Us')
   )
   .build()
 
-/**
- * Example of a survey form with complex conditional logic
- */
 export const userSurveyForm = new FormBuilder('user-survey', 'User Experience Survey')
   .description('Help us understand how you use our tools')
 

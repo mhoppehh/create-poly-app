@@ -9,12 +9,6 @@ import {
   generateUsageExample,
 } from '../forms/meta-form'
 
-/**
- * Form Builder Demo Script
- *
- * This script demonstrates the power of our form system by using it to create forms!
- * It's a meta-form - a form that generates other forms.
- */
 async function main() {
   console.log(`
 🎯 Welcome to the Form Builder Demo!
@@ -28,7 +22,7 @@ Let's get started...
 `)
 
   try {
-    // Step 1: Get basic form information
+
     console.log('📝 Step 1: Basic Form Information')
     const basicAnswers = await runForm(formBuilderForm, {
       validateOnChange: true,
@@ -44,7 +38,6 @@ Let's get started...
     console.log(`\n✅ Great! Creating form: "${basicAnswers.formTitle}"`)
     console.log(`📊 Groups to create: ${basicAnswers.numberOfGroups}`)
 
-    // Step 2: Get detailed question information
     console.log('\n📝 Step 2: Question Details')
     const dynamicForm = generateDynamicFormQuestions(basicAnswers.numberOfGroups)
     const detailAnswers = await runForm(dynamicForm.build(), {
@@ -53,12 +46,10 @@ Let's get started...
       saveKey: 'form-builder-details',
     })
 
-    // Step 3: Generate the form code
     console.log('\n🔧 Step 3: Generating Form Code...')
     const formCode = generateFormFromAnswers(basicAnswers, detailAnswers)
     const usageCode = generateUsageExample(basicAnswers.formId)
 
-    // Step 4: Save the generated files
     const outputDir = path.join(process.cwd(), 'generated-forms')
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true })
@@ -70,7 +61,6 @@ Let's get started...
     fs.writeFileSync(formFile, formCode)
     fs.writeFileSync(testFile, usageCode)
 
-    // Step 5: Show results
     console.log(`
 🎉 Success! Your form has been generated!
 
@@ -93,7 +83,6 @@ Let's get started...
 📖 Form Code Preview:
 ${'='.repeat(50)}`)
 
-    // Show a preview of the generated code
     const previewLines = formCode.split('\n').slice(0, 30)
     console.log(previewLines.join('\n'))
     if (formCode.split('\n').length > 30) {
@@ -102,7 +91,6 @@ ${'='.repeat(50)}`)
 
     console.log('='.repeat(50))
 
-    // Ask if they want to test the form immediately
     const { testNow } = await runForm({
       id: 'test-prompt',
       title: '🧪 Test Your Form',
@@ -124,8 +112,6 @@ ${'='.repeat(50)}`)
     if (testNow) {
       console.log(`\n🧪 Testing your form: "${basicAnswers.formTitle}"...\n`)
 
-      // Dynamically import and run the generated form
-      // For demo purposes, we'll create a simple form structure
       const testForm = createTestFormFromAnswers(basicAnswers, detailAnswers)
 
       const testAnswers = await runForm(testForm, {
@@ -162,9 +148,6 @@ form builders for any domain!
   }
 }
 
-/**
- * Create a test form from the user's answers for immediate testing
- */
 function createTestFormFromAnswers(basicAnswers: any, detailAnswers: any) {
   const groups = []
 
@@ -195,7 +178,6 @@ function createTestFormFromAnswers(basicAnswers: any, detailAnswers: any) {
       if (qDescription) question.description = qDescription
       if (qPlaceholder) question.placeholder = qPlaceholder
 
-      // Add options for select/multiselect
       if (qOptions && ['select', 'multiselect'].includes(qType)) {
         const options = qOptions
           .split(',')
@@ -208,7 +190,6 @@ function createTestFormFromAnswers(basicAnswers: any, detailAnswers: any) {
         question.options = options
       }
 
-      // Add basic validation
       if (qRequired || qType === 'email') {
         question.validation = []
         if (qRequired) {

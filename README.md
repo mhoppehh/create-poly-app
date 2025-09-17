@@ -87,12 +87,12 @@ Follow the interactive prompts to configure your project.
 
 ```bash
 # Build the project
-npm run build
+pnpm build
 
 # Type check
-npm run type-check
+pnpm type-check
 
 # Lint and format
-npm run lint:fix
-npm run format:fix
+pnpm lint:fix
+pnpm format:fix
 ```

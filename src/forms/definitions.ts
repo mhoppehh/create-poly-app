@@ -1,6 +1,5 @@
 import { Form } from './types'
 
-// Main project setup form for create-poly-app
 export const createPolyAppForm: Form = {
   id: 'create-poly-app',
   title: '🚀 Create Poly App',
@@ -108,103 +107,18 @@ export const createPolyAppForm: Form = {
           required: false,
           options: [
             {
-              label: 'Books Module',
-              value: 'books',
-              description: 'Sample books GraphQL module with queries and mutations',
-            },
-            {
-              label: 'Authentication',
-              value: 'auth',
-              description: 'User authentication and authorization (coming soon)',
-            },
-            {
-              label: 'Database Integration',
+              label: 'Prisma Integration',
               value: 'database',
-              description: 'Prisma ORM integration (coming soon)',
-            },
-            {
-              label: 'File Upload',
-              value: 'upload',
-              description: 'File upload capabilities (coming soon)',
-            },
-            {
-              label: 'Real-time Subscriptions',
-              value: 'subscriptions',
-              description: 'GraphQL subscriptions for real-time features (coming soon)',
+              description: 'Prisma ORM and type-safe database operations',
             },
           ],
-          defaultValue: ['books'],
-        },
-        {
-          id: 'includeDocumentation',
-          type: 'toggle',
-          title: 'Generate API documentation?',
-          description: 'This will include GraphQL Playground and schema documentation',
-          required: false,
-          defaultValue: true,
-        },
-      ],
-    },
-    {
-      id: 'development-setup',
-      title: 'Development Environment',
-      description: 'Configure your development environment',
-      questions: [
-        {
-          id: 'packageManager',
-          type: 'select',
-          title: 'Which package manager do you prefer?',
-          description: 'This will be used for installing dependencies',
-          required: true,
-          defaultValue: 'pnpm',
-          options: [
-            {
-              label: 'pnpm (recommended)',
-              value: 'pnpm',
-              description: 'Fast, disk space efficient package manager',
-            },
-            {
-              label: 'npm',
-              value: 'npm',
-              description: 'Default Node.js package manager',
-            },
-            {
-              label: 'yarn',
-              value: 'yarn',
-              description: 'Fast, reliable, and secure dependency management',
-            },
-          ],
-        },
-        {
-          id: 'includeESLint',
-          type: 'toggle',
-          title: 'Include ESLint configuration?',
-          description: 'Linting helps maintain code quality and consistency',
-          required: false,
-          defaultValue: true,
-        },
-        {
-          id: 'includePrettier',
-          type: 'toggle',
-          title: 'Include Prettier configuration?',
-          description: 'Code formatting for consistent style',
-          required: false,
-          defaultValue: true,
-        },
-        {
-          id: 'includeGitignore',
-          type: 'toggle',
-          title: 'Create .gitignore file?',
-          description: 'Exclude common files from version control',
-          required: false,
-          defaultValue: true,
+          defaultValue: ['database'],
         },
       ],
     },
   ],
 }
 
-// Example of a simple survey form to demonstrate versatility
 export const feedbackForm: Form = {
   id: 'feedback',
   title: 'User Feedback Survey',
