@@ -77,7 +77,6 @@ export class FormEngine {
 
     if (question.type === 'list') {
       if (!Array.isArray(value)) {
-
         this.state.answers[questionId] = value === undefined || value === null ? [] : [value]
       } else {
         this.state.answers[questionId] = value
@@ -217,7 +216,6 @@ export class FormEngine {
       const listErrors = this.validateListQuestion(question, value)
       errors.push(...listErrors)
     } else {
-
       if (question.validation) {
         for (const rule of question.validation) {
           const error = this.runValidationRule(rule, value, question)
@@ -282,7 +280,6 @@ export class FormEngine {
       }
       return true
     } else {
-
       this.state.isComplete = true
       if (this.events.onFormComplete) {
         this.events.onFormComplete(this.getState())
@@ -365,6 +362,8 @@ export class FormEngine {
         return typeof dependentValue === 'number' && dependentValue < rule.condition.value
       case 'contains':
         return typeof dependentValue === 'string' && dependentValue.includes(rule.condition.value)
+      case 'includes':
+        return Array.isArray(dependentValue) && dependentValue.includes(rule.condition.value)
       case 'custom':
         return rule.condition.evaluator(dependentValue, this.state.answers)
       default:
@@ -610,7 +609,6 @@ export class FormEngine {
           }
         }
       } catch (error) {
-
         console.warn('Failed to load form state:', error)
       }
     }

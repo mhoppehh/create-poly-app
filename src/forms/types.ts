@@ -61,6 +61,7 @@ export interface ConditionalRule {
     | { type: 'greaterThan'; value: number }
     | { type: 'lessThan'; value: number }
     | { type: 'contains'; value: string }
+    | { type: 'includes'; value: any }
     | { type: 'custom'; evaluator: (value: any, allAnswers: Record<string, any>) => boolean }
 }
 

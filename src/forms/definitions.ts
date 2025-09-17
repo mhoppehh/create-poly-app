@@ -42,51 +42,38 @@ export const createPolyAppForm: Form = {
           required: false,
           placeholder: 'An awesome polyglot application',
         },
+        {
+          id: 'projectWorkspaces',
+          type: 'multiselect',
+          title: 'Which workspaces would you like to include?',
+          description: 'Select the workspaces you want in your project',
+          required: true,
+          options: [
+            {
+              label: 'GraphQL API Server (Apollo Server)',
+              value: 'graphql-server',
+              description: 'A TypeScript-based Apollo Server for your API',
+            },
+            {
+              label: 'React Webapp (Vite)',
+              value: 'react-webapp',
+              description: 'A React + TypeScript frontend application using Vite',
+            },
+            {
+              label: 'Mobile App (React Native)',
+              value: 'mobile-app',
+              description: 'A React Native mobile application',
+            },
+          ],
+          defaultValue: ['react-frontend', 'graphql-server'],
+        },
       ],
     },
     {
       id: 'frontend-setup',
       title: 'Frontend Configuration',
       description: 'Choose your frontend setup',
-      questions: [
-        {
-          id: 'includeFrontend',
-          type: 'toggle',
-          title: 'Do you want to include a frontend application?',
-          description: 'This will create a React + TypeScript frontend with Vite',
-          required: true,
-          defaultValue: true,
-        },
-        {
-          id: 'includeTailwind',
-          type: 'toggle',
-          title: 'Do you want to include TailwindCSS?',
-          description: 'A utility-first CSS framework for rapid UI development',
-          required: true,
-          defaultValue: true,
-          showIf: [
-            {
-              dependsOn: 'includeFrontend',
-              condition: { type: 'equals', value: true },
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'backend-setup',
-      title: 'Backend Configuration',
-      description: 'Choose your backend setup',
-      questions: [
-        {
-          id: 'includeGraphQLServer',
-          type: 'toggle',
-          title: 'Do you want to include a GraphQL API server?',
-          description: 'This will create an Apollo Server with TypeScript',
-          required: true,
-          defaultValue: true,
-        },
-      ],
+      questions: [],
     },
     {
       id: 'api-features',
@@ -94,8 +81,8 @@ export const createPolyAppForm: Form = {
       description: 'Configure your GraphQL API features',
       showIf: [
         {
-          dependsOn: 'includeGraphQLServer',
-          condition: { type: 'equals', value: true },
+          dependsOn: 'projectWorkspaces',
+          condition: { type: 'includes', value: 'graphql-server' },
         },
       ],
       questions: [

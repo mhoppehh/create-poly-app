@@ -23,6 +23,7 @@ export async function modPackageJsonApolloServer(filePath: string): Promise<void
   pkg.scripts.compile = 'tsc'
   pkg.scripts.build = 'tsc -b tsconfig.build.json'
   pkg.scripts.dev = 'tsx watch --include "./src/**/*" ./src/index.ts'
+  pkg.scripts['type-check'] = 'tsc --noEmit'
 
   await fsp.writeFile(filePath, JSON.stringify(pkg, null, 2) + '\n', 'utf8')
 }

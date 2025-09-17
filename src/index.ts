@@ -31,15 +31,16 @@ async function main() {
     logger.infoFileOnly('main', 'Project will be created at: %s', projectPath)
 
     const features = ['projectDir']
+    const workspaces = answers.projectWorkspaces || []
 
-    if (answers.includeFrontend) {
+    if (workspaces.includes('react-webapp')) {
       features.push('vite')
       if (answers.includeTailwind) {
         features.push('tailwind')
       }
     }
 
-    if (answers.includeGraphQLServer) {
+    if (workspaces.includes('graphql-server')) {
       features.push('apollo-server')
 
       if (answers.apiFeatures && answers.apiFeatures.includes('database')) {
@@ -55,40 +56,23 @@ async function main() {
     console.log(`📁 Location: ${projectPath}`)
     console.log('\n🚀 Next steps:')
     console.log(`   cd ${projectName}`)
+    console.log('   pnpm install')
 
-    if (answers.packageManager === 'pnpm') {
-      console.log('   pnpm install')
-      if (answers.includeFrontend) {
-        console.log('   pnpm dev  # Start the frontend')
-      }
-      if (answers.includeGraphQLServer) {
-        console.log('   pnpm --filter=api dev  # Start the API server')
-      }
-    } else if (answers.packageManager === 'yarn') {
-      console.log('   yarn install')
-      if (answers.includeFrontend) {
-        console.log('   yarn dev  # Start the frontend')
-      }
-    } else {
-      console.log('   npm install')
-      if (answers.includeFrontend) {
-        console.log('   pnpm dev  # Start the frontend')
-      }
+    if (workspaces.includes('react-webapp')) {
+      console.log('   pnpm dev  # Start the frontend')
+    }
+
+    if (workspaces.includes('graphql-server')) {
+      console.log('   pnpm --filter=api dev  # Start the API server')
     }
 
     if (answers.apiFeatures && answers.apiFeatures.includes('database')) {
       console.log('\n📊 Database Setup (Prisma):')
       console.log('   1. Update your DATABASE_URL in api/.env')
       console.log('   2. Run database migrations:')
-      if (answers.packageManager === 'pnpm') {
-        console.log('      pnpm --filter=api prisma:push    # Push schema to database')
-        console.log('      pnpm --filter=api prisma:seed    # Seed with sample data')
-        console.log('      pnpm --filter=api prisma:studio  # Open Prisma Studio')
-      } else {
-        console.log('      cd api && pnpm prisma:push    # Push schema to database')
-        console.log('      cd api && pnpm prisma:seed    # Seed with sample data')
-        console.log('      cd api && pnpm prisma:studio  # Open Prisma Studio')
-      }
+      console.log('      pnpm --filter=api prisma:push    # Push schema to database')
+      console.log('      pnpm --filter=api prisma:seed    # Seed with sample data')
+      console.log('      pnpm --filter=api prisma:studio  # Open Prisma Studio')
     }
   } catch (error) {
     logger.error('main', 'Project creation failed: %s', error)
