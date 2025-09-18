@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as fsp from 'fs/promises'
 import * as path from 'path'
 
-export async function modPackageJsonPrisma(filePath: string): Promise<void> {
+export async function modPackageJsonPrisma(filePath: string, config: Record<string, any> = {}): Promise<void> {
   const dir = path.dirname(filePath)
   if (!fs.existsSync(dir)) {
     await fsp.mkdir(dir, { recursive: true })
@@ -24,8 +24,10 @@ export async function modPackageJsonPrisma(filePath: string): Promise<void> {
   pkg.scripts['prisma:migrate'] = 'prisma migrate dev'
   pkg.scripts['prisma:deploy'] = 'prisma migrate deploy'
   pkg.scripts['prisma:reset'] = 'prisma migrate reset'
-  pkg.scripts['prisma:seed'] = 'tsx prisma/seed.ts'
-  pkg.scripts['prisma:studio'] = 'prisma studio'
+
+  if (config.enableStudio !== false) {
+    pkg.scripts['prisma:studio'] = 'prisma studio'
+  }
 
   await fsp.writeFile(filePath, JSON.stringify(pkg, null, 2) + '\n', 'utf8')
 }

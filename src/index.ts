@@ -5,7 +5,11 @@ import { createLogger } from './logger'
 import { loadLoggingConfig } from './config'
 import { runForm } from './forms'
 import { createPolyAppForm } from './forms/definitions'
-import { selectFeaturesFromAnswers } from './forms/feature-selector'
+import {
+  selectFeaturesFromAnswers,
+  getFeatureConfigurationQuestions,
+  extractFeatureConfigurations,
+} from './forms/feature-selector'
 
 async function main() {
   const loggingConfig = loadLoggingConfig()
@@ -34,9 +38,35 @@ async function main() {
     const features = selectFeaturesFromAnswers(answers)
     logger.infoFileOnly('main', 'Selected features: %o', features)
 
+    const configQuestions = getFeatureConfigurationQuestions(features)
+    let allAnswers = { ...answers }
+
+    if (configQuestions.length > 0) {
+      console.log('\n⚙️  Configuring features...')
+
+      const configForm = {
+        id: 'feature-config',
+        title: '⚙️  Feature Configuration',
+        description: 'Configure the selected features for your project',
+        groups: configQuestions,
+      }
+
+      const configAnswers = await runForm(configForm, {
+        validateOnChange: true,
+        autoSave: true,
+        saveKey: 'create-poly-app-config-state',
+      })
+
+      allAnswers = { ...answers, ...configAnswers }
+      logger.infoFileOnly('main', 'Feature configurations: %o', configAnswers)
+    }
+
+    const featureConfigurations = extractFeatureConfigurations(allAnswers, features)
+    logger.infoFileOnly('main', 'Extracted feature configurations: %o', featureConfigurations)
+
     console.log('\n🎯 Creating project with features:', features.join(', '))
 
-    await scaffoldProject(projectName, projectPath, features)
+    await scaffoldProject(projectName, projectPath, features, featureConfigurations)
 
     console.log(`\n✅ Project "${projectName}" created successfully!`)
     console.log(`📁 Location: ${projectPath}`)

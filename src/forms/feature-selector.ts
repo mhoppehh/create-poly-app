@@ -1,5 +1,6 @@
 import { FEATURES } from '../features'
 import type { Feature, FeatureActivationCondition, FeatureActivationRule } from '../types'
+import type { Question, QuestionGroup } from './types'
 
 export function evaluateCondition(condition: FeatureActivationCondition, answers: Record<string, any>): boolean {
   const value = answers[condition.questionId]
@@ -72,6 +73,56 @@ function resolveDependencies(features: string[]): string[] {
   }
 
   return Array.from(resolved)
+}
+
+export function getFeatureConfigurationQuestions(selectedFeatures: string[]): QuestionGroup[] {
+  const configGroups: QuestionGroup[] = []
+
+  for (const featureId of selectedFeatures) {
+    const feature = FEATURES[featureId]
+    if (feature?.configuration && feature.configuration.length > 0) {
+      const prefixedQuestions: Question[] = feature.configuration.map(question => ({
+        ...question,
+        id: `${featureId}.${question.id}`,
+      }))
+
+      configGroups.push({
+        id: `${featureId}-config`,
+        title: `${feature.name} Configuration`,
+        description: `Configure settings for ${feature.name}`,
+        questions: prefixedQuestions,
+      })
+    }
+  }
+
+  return configGroups
+}
+
+export function extractFeatureConfigurations(
+  answers: Record<string, any>,
+  selectedFeatures: string[],
+): Record<string, Record<string, any>> {
+  const configurations: Record<string, Record<string, any>> = {}
+
+  for (const featureId of selectedFeatures) {
+    const feature = FEATURES[featureId]
+    if (feature?.configuration) {
+      const featureConfig: Record<string, any> = {}
+
+      for (const question of feature.configuration) {
+        const prefixedQuestionId = `${featureId}.${question.id}`
+        if (prefixedQuestionId in answers) {
+          featureConfig[question.id] = answers[prefixedQuestionId]
+        } else if (question.defaultValue !== undefined) {
+          featureConfig[question.id] = question.defaultValue
+        }
+      }
+
+      configurations[featureId] = featureConfig
+    }
+  }
+
+  return configurations
 }
 
 export const ActivationConditions = {

@@ -1,4 +1,6 @@
-export type CodeMod = (filePath: string) => void | Promise<void>
+import type { Question } from './forms/types'
+
+export type CodeMod = (filePath: string, config?: Record<string, any>) => void | Promise<void>
 
 export interface InstallTemplate {
   source: string
@@ -11,7 +13,7 @@ export interface InstallTemplate {
 export type InstallTemplates = InstallTemplate[]
 
 export interface InstallScript {
-  src: ((args: any) => string) | string
+  src: ((args: any, config?: Record<string, any>) => string) | string
   dir?: string
 }
 
@@ -20,6 +22,8 @@ export interface FeatureStage {
   scripts?: InstallScript[]
   templates?: InstallTemplates
   mods?: Record<string, CodeMod[]>
+
+  activatedBy?: FeatureActivationRule | FeatureActivationCondition
 }
 
 export interface FeatureActivationCondition {
@@ -45,6 +49,8 @@ export interface Feature {
   dependsOn?: string[]
 
   activatedBy?: FeatureActivationRule | FeatureActivationCondition
+
+  configuration?: Question[]
 
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
