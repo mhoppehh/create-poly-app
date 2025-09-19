@@ -14,7 +14,10 @@ export const apolloServer: Feature = {
       name: 'setup-api-structure',
       scripts: [
         { src: 'pnpm init && pnpm pkg set type="module"', dir: 'api' },
-        { src: 'pnpm install -D typescript @types/node tsx', dir: 'api' },
+        {
+          src: 'pnpm install -D  typescript @types/node tsx',
+          dir: 'api',
+        },
       ],
       mods: {
         'api/package.json': [modPackageJsonApolloServer],
@@ -35,7 +38,15 @@ export const apolloServer: Feature = {
       name: 'create-modules',
       scripts: [
         {
-          src: 'pnpm install --filter=api @graphql-tools/load-files @graphql-tools/merge @graphql-tools/utils graphql-scalars',
+          src: 'pnpm add --filter=api -D @graphql-codegen/cli @graphql-codegen/graphql-modules-preset @graphql-codegen/typescript-resolvers @graphql-codegen/typescript',
+          dir: 'api',
+        },
+        {
+          src: 'pnpm install --filter=api @graphql-tools/load-files @graphql-tools/merge @graphql-tools/utils graphql-scalars graphql-modules',
+          dir: 'api',
+        },
+        {
+          src: 'pnpm codegen',
           dir: 'api',
         },
       ],
