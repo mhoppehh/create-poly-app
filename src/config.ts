@@ -16,13 +16,9 @@ export const DEFAULT_LOGGING_CONFIG: LoggingConfig = {
   colorize: true,
 }
 
-/**
- * Load logging configuration from environment variables
- */
 export function loadLoggingConfig(): LoggingConfig {
   const config = { ...DEFAULT_LOGGING_CONFIG }
 
-  // Override with environment variables if present
   if (process.env.LOG_LEVEL) {
     const levelMap: Record<string, LogLevel> = {
       error: LogLevel.ERROR,

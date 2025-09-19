@@ -1,0 +1,31 @@
+import type { CodegenConfig } from '@graphql-codegen/cli'
+
+const config: CodegenConfig = {
+  verbose: true,
+  hooks: {
+    onError: error => {
+      console.error('GraphQL Codegen Error:', error)
+    },
+  },
+  schema: ['./src/modules/*/*.graphql', './src/base.graphql'],
+  generates: {
+    './src/modules/': {
+      preset: 'graphql-modules',
+      presetConfig: {
+        baseTypesPath: '../generated-types/graphql.ts',
+        filename: 'module-types.ts',
+        useGraphQLModules: false,
+      },
+      plugins: [
+        {
+          add: {
+            content: '/* eslint-disable */',
+          },
+        },
+        'typescript',
+        'typescript-resolvers',
+      ],
+    },
+  },
+}
+export default config

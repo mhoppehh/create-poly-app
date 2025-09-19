@@ -1,6 +1,5 @@
 import { Form } from './types'
 
-// Main project setup form for create-poly-app
 export const createPolyAppForm: Form = {
   id: 'create-poly-app',
   title: '🚀 Create Poly App',
@@ -43,51 +42,38 @@ export const createPolyAppForm: Form = {
           required: false,
           placeholder: 'An awesome polyglot application',
         },
+        {
+          id: 'projectWorkspaces',
+          type: 'multiselect',
+          title: 'Which workspaces would you like to include?',
+          description: 'Select the workspaces you want in your project',
+          required: true,
+          options: [
+            {
+              label: 'GraphQL API Server (Apollo Server)',
+              value: 'graphql-server',
+              description: 'A TypeScript-based Apollo Server for your API',
+            },
+            {
+              label: 'React Webapp (Vite)',
+              value: 'react-webapp',
+              description: 'A React + TypeScript frontend application using Vite',
+            },
+            {
+              label: 'Mobile App (React Native)',
+              value: 'mobile-app',
+              description: 'A React Native mobile application',
+            },
+          ],
+          defaultValue: ['react-webapp', 'graphql-server'],
+        },
       ],
     },
     {
       id: 'frontend-setup',
       title: 'Frontend Configuration',
       description: 'Choose your frontend setup',
-      questions: [
-        {
-          id: 'includeFrontend',
-          type: 'toggle',
-          title: 'Do you want to include a frontend application?',
-          description: 'This will create a React + TypeScript frontend with Vite',
-          required: true,
-          defaultValue: true,
-        },
-        {
-          id: 'includeTailwind',
-          type: 'toggle',
-          title: 'Do you want to include TailwindCSS?',
-          description: 'A utility-first CSS framework for rapid UI development',
-          required: true,
-          defaultValue: true,
-          showIf: [
-            {
-              dependsOn: 'includeFrontend',
-              condition: { type: 'equals', value: true },
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'backend-setup',
-      title: 'Backend Configuration',
-      description: 'Choose your backend setup',
-      questions: [
-        {
-          id: 'includeGraphQLServer',
-          type: 'toggle',
-          title: 'Do you want to include a GraphQL API server?',
-          description: 'This will create an Apollo Server with TypeScript',
-          required: true,
-          defaultValue: true,
-        },
-      ],
+      questions: [],
     },
     {
       id: 'api-features',
@@ -95,8 +81,8 @@ export const createPolyAppForm: Form = {
       description: 'Configure your GraphQL API features',
       showIf: [
         {
-          dependsOn: 'includeGraphQLServer',
-          condition: { type: 'equals', value: true },
+          dependsOn: 'projectWorkspaces',
+          condition: { type: 'includes', value: 'graphql-server' },
         },
       ],
       questions: [
@@ -108,103 +94,18 @@ export const createPolyAppForm: Form = {
           required: false,
           options: [
             {
-              label: 'Books Module',
-              value: 'books',
-              description: 'Sample books GraphQL module with queries and mutations',
-            },
-            {
-              label: 'Authentication',
-              value: 'auth',
-              description: 'User authentication and authorization (coming soon)',
-            },
-            {
-              label: 'Database Integration',
+              label: 'Prisma Integration',
               value: 'database',
-              description: 'Prisma ORM integration (coming soon)',
-            },
-            {
-              label: 'File Upload',
-              value: 'upload',
-              description: 'File upload capabilities (coming soon)',
-            },
-            {
-              label: 'Real-time Subscriptions',
-              value: 'subscriptions',
-              description: 'GraphQL subscriptions for real-time features (coming soon)',
+              description: 'Prisma ORM and type-safe database operations',
             },
           ],
-          defaultValue: ['books'],
-        },
-        {
-          id: 'includeDocumentation',
-          type: 'toggle',
-          title: 'Generate API documentation?',
-          description: 'This will include GraphQL Playground and schema documentation',
-          required: false,
-          defaultValue: true,
-        },
-      ],
-    },
-    {
-      id: 'development-setup',
-      title: 'Development Environment',
-      description: 'Configure your development environment',
-      questions: [
-        {
-          id: 'packageManager',
-          type: 'select',
-          title: 'Which package manager do you prefer?',
-          description: 'This will be used for installing dependencies',
-          required: true,
-          defaultValue: 'pnpm',
-          options: [
-            {
-              label: 'pnpm (recommended)',
-              value: 'pnpm',
-              description: 'Fast, disk space efficient package manager',
-            },
-            {
-              label: 'npm',
-              value: 'npm',
-              description: 'Default Node.js package manager',
-            },
-            {
-              label: 'yarn',
-              value: 'yarn',
-              description: 'Fast, reliable, and secure dependency management',
-            },
-          ],
-        },
-        {
-          id: 'includeESLint',
-          type: 'toggle',
-          title: 'Include ESLint configuration?',
-          description: 'Linting helps maintain code quality and consistency',
-          required: false,
-          defaultValue: true,
-        },
-        {
-          id: 'includePrettier',
-          type: 'toggle',
-          title: 'Include Prettier configuration?',
-          description: 'Code formatting for consistent style',
-          required: false,
-          defaultValue: true,
-        },
-        {
-          id: 'includeGitignore',
-          type: 'toggle',
-          title: 'Create .gitignore file?',
-          description: 'Exclude common files from version control',
-          required: false,
-          defaultValue: true,
+          defaultValue: ['database'],
         },
       ],
     },
   ],
 }
 
-// Example of a simple survey form to demonstrate versatility
 export const feedbackForm: Form = {
   id: 'feedback',
   title: 'User Feedback Survey',

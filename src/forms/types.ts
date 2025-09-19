@@ -1,5 +1,3 @@
-// Form system types for reusable, conditional forms
-
 export type QuestionType =
   | 'text'
   | 'number'
@@ -33,38 +31,28 @@ export interface SelectOption {
 }
 
 export interface ListConfig {
-  // The type of items in the list (any existing question type except 'list')
   itemType: Exclude<QuestionType, 'list'>
 
-  // Minimum number of items required
   minItems?: number
 
-  // Maximum number of items allowed
   maxItems?: number
 
-  // Options for select/multiselect item types
   itemOptions?: SelectOption[]
 
-  // Validation rules that apply to each item in the list
   itemValidation?: ValidationRule[]
 
-  // Additional properties for the item type
   itemProps?: Record<string, any>
 
-  // Placeholder for new items
   itemPlaceholder?: string
 
-  // Label for add button
   addLabel?: string
 
-  // Label for remove button
   removeLabel?: string
 }
 
 export interface ConditionalRule {
-  // Question ID to check
   dependsOn: string
-  // Condition to evaluate
+
   condition:
     | { type: 'equals'; value: any }
     | { type: 'notEquals'; value: any }
@@ -73,6 +61,7 @@ export interface ConditionalRule {
     | { type: 'greaterThan'; value: number }
     | { type: 'lessThan'; value: number }
     | { type: 'contains'; value: string }
+    | { type: 'includes'; value: any }
     | { type: 'custom'; evaluator: (value: any, allAnswers: Record<string, any>) => boolean }
 }
 
@@ -85,19 +74,14 @@ export interface Question {
   defaultValue?: any
   placeholder?: string
 
-  // For select/multiselect types
   options?: SelectOption[]
 
-  // For list type questions
   listConfig?: ListConfig
 
-  // Validation rules
   validation?: ValidationRule[]
 
-  // Conditional display
   showIf?: ConditionalRule[]
 
-  // Additional properties for specific question types
   props?: Record<string, any>
 }
 
@@ -115,7 +99,6 @@ export interface Form {
   description?: string
   groups: QuestionGroup[]
 
-  // Global form settings
   settings?: {
     allowBack?: boolean
     showProgress?: boolean

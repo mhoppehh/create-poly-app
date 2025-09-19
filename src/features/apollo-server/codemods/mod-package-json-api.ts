@@ -1,11 +1,8 @@
 import * as fs from 'fs'
 import * as fsp from 'fs/promises'
 import * as path from 'path'
-import { SourceFile } from 'ts-morph'
 
-export async function modPackageJsonApolloServer(sourceFile: SourceFile): Promise<void> {
-  const filePath = sourceFile.getFilePath()
-
+export async function modPackageJsonApolloServer(filePath: string): Promise<void> {
   const dir = path.dirname(filePath)
   if (!fs.existsSync(dir)) {
     await fsp.mkdir(dir, { recursive: true })
@@ -26,6 +23,8 @@ export async function modPackageJsonApolloServer(sourceFile: SourceFile): Promis
   pkg.scripts.compile = 'tsc'
   pkg.scripts.build = 'tsc -b tsconfig.build.json'
   pkg.scripts.dev = 'tsx watch --include "./src/**/*" ./src/index.ts'
+  pkg.scripts.codegen = 'graphql-codegen --config codegen.ts --verbose'
+  pkg.scripts['type-check'] = 'tsc --noEmit'
 
   await fsp.writeFile(filePath, JSON.stringify(pkg, null, 2) + '\n', 'utf8')
 }

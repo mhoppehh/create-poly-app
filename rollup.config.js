@@ -25,7 +25,6 @@ export default [
     ],
   },
   {
-    // For bundling declaration files
     input: 'dist/types/index.d.ts',
     output: [{ file: 'dist/index.d.ts', format: 'es' }],
     plugins: [

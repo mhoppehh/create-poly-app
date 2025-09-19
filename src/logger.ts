@@ -37,16 +37,13 @@ class Logger {
 
   private initializeLogFile(): void {
     try {
-      // Ensure log directory exists
       const logDir = path.dirname(this.logFilePath)
       if (!fs.existsSync(logDir)) {
         fs.mkdirSync(logDir, { recursive: true })
       }
 
-      // Create write stream for log file, overwriting any existing content
       this.logFileStream = fs.createWriteStream(this.logFilePath, { flags: 'w' })
 
-      // Add initial separator for new session
       const sessionStart = `${'='.repeat(50)}\n[${new Date().toISOString()}] NEW SESSION STARTED\n${'='.repeat(50)}\n`
       this.logFileStream.write(sessionStart)
     } catch (error) {
@@ -65,7 +62,6 @@ class Logger {
     const timestamp = new Date().toLocaleTimeString()
     const formattedMessage = args.length > 0 ? format(message, ...args) : message
 
-    // Color codes for different log levels
     const colors = {
       ERROR: '\x1b[31m', // Red
       WARN: '\x1b[33m', // Yellow
@@ -144,7 +140,6 @@ class Logger {
     this.log(LogLevel.DEBUG, 'DEBUG', source, message, ...args)
   }
 
-  // File-only logging methods for detailed information
   infoFileOnly(source: string, message: string, ...args: any[]): void {
     this.logFileOnly(LogLevel.INFO, 'INFO', source, message, ...args)
   }
@@ -153,18 +148,15 @@ class Logger {
     this.logFileOnly(LogLevel.DEBUG, 'DEBUG', source, message, ...args)
   }
 
-  // Console-only logging methods for status updates
   statusInfo(source: string, message: string, ...args: any[]): void {
     this.logConsoleOnly(LogLevel.INFO, 'INFO', source, message, ...args)
   }
 
-  // Combined methods that log minimal status to console and detailed info to file
   operation(source: string, consoleMessage: string, fileMessage: string, ...args: any[]): void {
     this.logConsoleOnly(LogLevel.INFO, 'INFO', source, consoleMessage, ...args)
     this.logFileOnly(LogLevel.INFO, 'INFO', source, fileMessage, ...args)
   }
 
-  // Convenience methods for common patterns with refined console/file separation
   scriptStart(source: string, script: string): void {
     this.operation(source, 'Running script...', 'Starting script: %s', script)
   }
@@ -231,7 +223,6 @@ class Logger {
   }
 }
 
-// Create singleton instance
 let loggerInstance: Logger | null = null
 
 export function createLogger(options?: LoggerOptions): Logger {
@@ -249,7 +240,6 @@ export function getLogger(): Logger {
   return loggerInstance
 }
 
-// Cleanup on process exit
 process.on('exit', () => {
   if (loggerInstance) {
     loggerInstance.close()

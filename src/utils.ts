@@ -18,10 +18,10 @@ export async function createFolder(folderPath: string, source: string = 'utils')
 
 export async function createFile(filePath: string, content: string, source: string = 'utils') {
   const logger = getLogger()
-  const directory = path.dirname(filePath) // Get the directory path from the file path
+  const directory = path.dirname(filePath)
 
   try {
-    // Ensure the directory exists before writing the file
+
     await fs.mkdir(directory, { recursive: true })
     await fs.writeFile(filePath, content, { encoding: 'utf8' })
     logger.fileCreated(source, filePath)
