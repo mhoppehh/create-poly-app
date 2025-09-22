@@ -1,23 +1,79 @@
 {
   "name": "create-poly-app",
   "version": "1.0.0",
-  "description": "",
+  "description": "A powerful CLI tool for scaffolding modern polyglot applications with React, GraphQL, Prisma, and more",
   "type": "module",
   "main": "./dist/main.cjs",
+  "module": "./dist/main.mjs",
+  "types": "./dist/index.d.ts",
   "bin": {
     "create-poly-app": "./dist/main.cjs"
   },
+  "exports": {
+    ".": {
+      "import": "./dist/main.mjs",
+      "require": "./dist/main.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "rollup -c",
+    "build:clean": "rm -rf dist && pnpm build",
     "type-check": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --check .",
     "format:fix": "prettier --write .",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "pnpm build:clean && pnpm type-check && pnpm lint && pnpm format",
+    "publish:check": "./scripts/publish-check.sh",
+    "release:patch": "npm version patch && npm publish",
+    "release:minor": "npm version minor && npm publish",
+    "release:major": "npm version major && npm publish",
     "demo:forms": "tsx src/scripts/demo-forms.ts",
     "demo:forms:meta": "tsx src/scripts/form-builder-demo.ts"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "cli",
+    "scaffold",
+    "scaffolding",
+    "generator",
+    "boilerplate",
+    "typescript",
+    "react",
+    "vite",
+    "graphql",
+    "apollo-server",
+    "prisma",
+    "tailwindcss",
+    "monorepo",
+    "fullstack",
+    "polyglot",
+    "create-app",
+    "project-template"
+  ],
+  "author": {
+    "name": "mhoppehh",
+    "url": "https://github.com/mhoppehh"
+  },
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mhoppehh/create-poly-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mhoppehh/create-poly-app/issues"
+  },
+  "homepage": "https://github.com/mhoppehh/create-poly-app#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "dependencies": {
     "@types/glob": "^9.0.0",
     "css-tree": "^3.1.0",

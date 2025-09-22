@@ -1,0 +1,127 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (patch, minor, major, or specific version like 1.2.3)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run tests and build
+        run: |
+          pnpm type-check
+          pnpm lint
+          pnpm format
+          pnpm build:clean
+
+      - name: Bump version
+        id: version
+        run: |
+          if [[ "${{ github.event.inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            # Specific version provided
+            npm version ${{ github.event.inputs.version }} --no-git-tag-version
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            # Semantic version bump
+            NEW_VERSION=$(npm version ${{ github.event.inputs.version }} --no-git-tag-version)
+            echo "version=${NEW_VERSION#v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update CHANGELOG
+        run: |
+          # Add new version to CHANGELOG.md
+          NEW_VERSION="${{ steps.version.outputs.version }}"
+          DATE=$(date +"%Y-%m-%d")
+
+          # Create a temporary file with the new entry
+          echo "## [$NEW_VERSION] - $DATE" > temp_changelog.md
+          echo "" >> temp_changelog.md
+          echo "### Added" >> temp_changelog.md
+          echo "- New features and improvements" >> temp_changelog.md
+          echo "" >> temp_changelog.md
+          echo "### Changed" >> temp_changelog.md
+          echo "- Updated dependencies and configurations" >> temp_changelog.md
+          echo "" >> temp_changelog.md
+          echo "### Fixed" >> temp_changelog.md
+          echo "- Bug fixes and performance improvements" >> temp_changelog.md
+          echo "" >> temp_changelog.md
+
+          # Prepend to existing CHANGELOG.md if it exists
+          if [ -f CHANGELOG.md ]; then
+            tail -n +2 CHANGELOG.md >> temp_changelog.md
+          fi
+
+          mv temp_changelog.md CHANGELOG.md
+
+      - name: Commit changes
+        run: |
+          git add package.json CHANGELOG.md
+          git commit -m "chore: release v${{ steps.version.outputs.version }}"
+          git tag "v${{ steps.version.outputs.version }}"
+
+      - name: Push changes
+        run: |
+          git push origin main --follow-tags
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          release_name: Release v${{ steps.version.outputs.version }}
+          body: |
+            ## Changes in v${{ steps.version.outputs.version }}
+
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for detailed changes.
+
+            ## Installation
+
+            ```bash
+            npm install -g create-poly-app@${{ steps.version.outputs.version }}
+            ```
+
+            ## Usage
+
+            ```bash
+            create-poly-app
+            ```
+          draft: false
+          prerelease: false
