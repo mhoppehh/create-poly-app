@@ -10,7 +10,7 @@ export const vite: Feature = {
   stages: [
     {
       name: 'create-vite-app',
-      scripts: [{ src: 'npm create vite@latest web -- --template react-ts' }],
+      scripts: [{ src: 'pnpm create vite@latest web --template react-ts --no-interactive' }],
     },
   ],
 }
