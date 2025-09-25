@@ -1,9 +1,0 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-{{#if enableConventionalCommits}}
-echo "📝 Validating commit message format..."
-pnpm commitlint --edit $1
-{{else}}
-echo "📝 Commit message validation disabled"
-{{/if}}

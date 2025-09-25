@@ -66,10 +66,7 @@ export const developerExperience: Feature = {
     {
       name: 'install-git-hooks-and-conventional-commits',
       activatedBy: ActivationConditions.equals('enableConventionalCommits', true),
-      scripts: [
-        { src: 'pnpm add -D -w husky lint-staged @commitlint/cli @commitlint/config-conventional', dir: '.' },
-        { src: 'pnpm exec husky init', dir: '.' },
-      ],
+      scripts: [{ src: 'pnpm add -D -w lint-staged @commitlint/cli @commitlint/config-conventional', dir: '.' }],
     },
     {
       name: 'install-semantic-release',

@@ -13,7 +13,6 @@ export const addDevxScripts: CodeMod = (filePath: string, config?: Record<string
     format: 'prettier --check "**/*.{ts,tsx,js,jsx,json,css,scss,md}"',
     'format:fix': 'prettier --write "**/*.{ts,tsx,js,jsx,json,css,scss,md}"',
     'type-check': 'tsc --noEmit',
-    prepare: 'husky',
     'lint-staged': 'lint-staged',
     commitlint: 'commitlint --edit',
   }
