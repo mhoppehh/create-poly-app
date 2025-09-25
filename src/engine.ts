@@ -64,6 +64,7 @@ export async function scaffoldProject(
   projectDir: string,
   featureIds: string[],
   featureConfigurations: Record<string, Record<string, any>> = {},
+  allAnswers: Record<string, any> = {},
 ) {
   const logger = getLogger()
   logger.projectStart('engine', projectName)
@@ -277,9 +278,11 @@ export async function scaffoldProject(
     if (feature.stages && feature.stages.length > 0) {
       for (const stage of feature.stages) {
         if (stage.activatedBy) {
-          const shouldActivate = evaluateRule(stage.activatedBy, featureConfig)
+          const shouldActivate = evaluateRule(stage.activatedBy, allAnswers)
           if (!shouldActivate) {
             logger.infoFileOnly(feature.name, 'Skipping stage "%s" - activation condition not met', stage.name)
+            logger.infoFileOnly(feature.name, 'Stage activation debug - allAnswers: %o', allAnswers)
+            logger.infoFileOnly(feature.name, 'Stage activation debug - condition: %o', stage.activatedBy)
             continue
           }
         }

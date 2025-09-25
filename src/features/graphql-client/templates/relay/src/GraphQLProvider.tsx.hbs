@@ -1,0 +1,15 @@
+import React from 'react'
+import { RelayEnvironmentProvider } from 'react-relay'
+import { environment } from './relay-environment'
+
+interface GraphQLProviderProps {
+  children: React.ReactNode
+}
+
+export function GraphQLProvider({ children }: GraphQLProviderProps) {
+  return (
+    <RelayEnvironmentProvider environment={environment}>
+      {children}
+    </RelayEnvironmentProvider>
+  )
+}

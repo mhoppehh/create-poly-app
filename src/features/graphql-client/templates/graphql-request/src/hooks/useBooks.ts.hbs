@@ -1,0 +1,10 @@
+import { useQuery } from '@tanstack/react-query'
+import { client } from '../graphql-request-client'
+import { GET_BOOKS } from '../queries/books'
+
+export function useGetBooks() {
+  return useQuery({
+    queryKey: ['books'],
+    queryFn: () => client.request(GET_BOOKS),
+  })
+}
