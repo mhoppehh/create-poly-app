@@ -1,0 +1,18 @@
+{
+{{#if enableConventionalCommits}}
+  "*.{js,jsx,ts,tsx,css,scss,md,json}": [
+    "prettier --write",
+    "eslint --fix"
+  ],
+  "*.{ts,tsx}": [
+    "tsc --noEmit"
+  ]
+{{else}}
+  "*.{js,jsx,ts,tsx}": [
+    "eslint --fix"
+  ],
+  "*.{js,jsx,ts,tsx,css,scss,md,json}": [
+    "prettier --write"
+  ]
+{{/if}}
+}

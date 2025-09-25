@@ -1,0 +1,34 @@
+{
+  "printWidth": {{printWidth}},
+  "tabWidth": {{tabWidth}},
+  "useTabs": false,
+  "semi": {{semi}},
+  "singleQuote": {{singleQuote}},
+  "quoteProps": "as-needed",
+  "jsxSingleQuote": {{singleQuote}},
+  "trailingComma": "{{trailingComma}}",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "avoid",
+  "endOfLine": "lf",
+  "embeddedLanguageFormatting": "auto",
+  "singleAttributePerLine": false,
+  "plugins": [
+    "prettier-plugin-organize-imports",
+    "prettier-plugin-packagejson"
+  ],
+  "overrides": [
+    {
+      "files": "*.json",
+      "options": {
+        "trailingComma": "none"
+      }
+    },
+    {
+      "files": "*.md",
+      "options": {
+        "proseWrap": "always"
+      }
+    }
+  ]
+}

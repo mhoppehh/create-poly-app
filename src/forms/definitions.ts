@@ -151,6 +151,21 @@ export const createPolyAppForm: Form = {
         },
       ],
     },
+    {
+      id: 'developer-experience',
+      title: 'Developer Experience',
+      description: 'Enhance your development workflow with professional tooling',
+      questions: [
+        {
+          id: 'enableDevX',
+          type: 'toggle',
+          title: 'Enable Developer Experience Suite?',
+          description: 'Add comprehensive linting, formatting, Git automation, and productivity tools',
+          required: false,
+          defaultValue: true,
+        },
+      ],
+    },
   ],
 }
 

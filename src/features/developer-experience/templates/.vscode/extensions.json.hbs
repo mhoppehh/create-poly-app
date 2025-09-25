@@ -1,0 +1,50 @@
+{
+  "recommendations": [
+    // Essential Extensions
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-typescript-next",
+    
+    // Git & Version Control
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    "github.copilot",
+    "github.copilot-chat",
+    
+    // Development Tools
+    "ms-vscode.vscode-json",
+    "redhat.vscode-yaml",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+    "usernamehw.errorlens",
+    
+    // Testing & Debugging
+    "ms-vscode.vscode-jest",
+    "ms-vscode.test-adapter-converter",
+    
+    // Productivity
+    "gruntfuggly.todo-tree",
+    "streetsidesoftware.code-spell-checker",
+    "wayou.vscode-todo-highlight",
+    
+{{#if includeReactExtensions}}
+    // React Development
+    "dsznajder.es7-react-js-snippets",
+    "formulahendry.auto-close-tag",
+    "ms-vscode.vscode-react-native",
+{{/if}}
+
+{{#if includeMarkdownExtensions}}
+    // Documentation
+    "yzhang.markdown-all-in-one",
+    "shd101wyy.markdown-preview-enhanced",
+{{/if}}
+
+{{#if includeThemeExtensions}}
+    // Themes (Optional)
+    "github.github-vscode-theme",
+    "pkief.material-icon-theme"
+{{/if}}
+  ]
+}
