@@ -14,6 +14,7 @@
     "format:fix": "prettier --write .",
     "demo:forms": "tsx src/scripts/demo-forms.ts",
     "demo:forms:meta": "tsx src/scripts/form-builder-demo.ts",
+    "demo:presets": "tsx src/scripts/preset-demo.ts",
     "scaffold:feature": "tsx src/scripts/scaffold-feature.ts"
   },
   "keywords": [],

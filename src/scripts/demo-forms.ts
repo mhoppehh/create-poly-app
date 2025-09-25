@@ -215,9 +215,14 @@ Choose what you'd like to see:
                 description: 'Use forms to create other forms!',
               },
               {
-                label: 'Both Demos',
-                value: 'both',
-                description: 'Run both demonstrations',
+                label: 'Preset System Demo',
+                value: 'presets',
+                description: 'Save and reuse form configurations with presets',
+              },
+              {
+                label: 'All Demos',
+                value: 'all',
+                description: 'Run all demonstrations',
               },
             ],
           },
@@ -233,10 +238,17 @@ Choose what you'd like to see:
     case 'meta':
       await runMetaFormDemo()
       break
-    case 'both':
+    case 'presets':
+      const { runPresetDemo } = await import('./preset-demo')
+      await runPresetDemo()
+      break
+    case 'all':
       await runSimpleDemo()
       console.log('\n' + '='.repeat(80) + '\n')
       await runMetaFormDemo()
+      console.log('\n' + '='.repeat(80) + '\n')
+      const { runPresetDemo: runPresetDemo2 } = await import('./preset-demo')
+      await runPresetDemo2()
       break
     default:
       console.log('❌ No demo selected')

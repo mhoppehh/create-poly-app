@@ -8,7 +8,9 @@ import {
   ConditionalRule,
   FormEngineOptions,
   FormEvents,
+  Preset,
 } from './types'
+import { PresetManager } from './preset-manager'
 
 export class FormEngine {
   private form: Form
@@ -585,6 +587,80 @@ export class FormEngine {
     }
 
     return null
+  }
+
+  async loadPreset(presetId: string, presetManager?: PresetManager): Promise<boolean> {
+    const manager = presetManager || new PresetManager()
+    const preset = await manager.getPreset(presetId)
+
+    if (!preset) {
+      return false
+    }
+
+    // Verify the preset is for this form
+    if (preset.formId !== this.form.id) {
+      console.warn(`Preset ${presetId} is for form ${preset.formId}, but current form is ${this.form.id}`)
+      return false
+    }
+
+    // Load the answers
+    this.state.answers = { ...preset.answers }
+
+    // Clear errors and reset touched state
+    this.state.errors = {}
+    this.state.touched = new Set()
+
+    // Reset to first group
+    this.state.currentGroupIndex = 0
+    this.state.isComplete = false
+
+    // Save state if auto-save is enabled
+    if (this.options.autoSave) {
+      this.saveState()
+    }
+
+    return true
+  }
+
+  async saveAsPreset(
+    name: string,
+    description?: string,
+    tags?: string[],
+    presetManager?: PresetManager,
+  ): Promise<Preset | null> {
+    const manager = presetManager || new PresetManager()
+
+    try {
+      const presetData: Omit<Preset, 'id' | 'createdAt' | 'updatedAt'> = {
+        name,
+        formId: this.form.id,
+        answers: { ...this.state.answers },
+      }
+
+      if (description !== undefined) {
+        presetData.description = description
+      }
+
+      if (tags !== undefined) {
+        presetData.tags = tags
+      }
+
+      const preset = await manager.savePreset(presetData)
+
+      return preset
+    } catch (error) {
+      console.error('Failed to save preset:', error)
+      return null
+    }
+  }
+
+  async getFormPresets(presetManager?: PresetManager): Promise<Preset[]> {
+    const manager = presetManager || new PresetManager()
+    return await manager.getPresetsForForm(this.form.id)
+  }
+
+  canSaveAsPreset(): boolean {
+    return Object.keys(this.state.answers).length > 0
   }
 
   private saveState(): void {

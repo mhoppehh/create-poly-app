@@ -142,3 +142,31 @@ export interface FormEngineOptions {
   autoSave?: boolean
   saveKey?: string
 }
+
+// Preset System Types
+export interface Preset {
+  id: string
+  name: string
+  description?: string
+  formId: string
+  answers: Record<string, any>
+  tags?: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PresetMetadata {
+  id: string
+  name: string
+  description?: string
+  formId: string
+  tags?: string[]
+  createdAt: string
+  updatedAt: string
+  answerCount: number
+}
+
+export interface PresetManagerOptions {
+  storageKey?: string
+  maxPresets?: number
+}
