@@ -1,0 +1,18 @@
+import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client'
+
+// Create HTTP link
+const httpLink = createHttpLink({
+  uri: '{{graphqlEndpoint}}',
+})
+
+// Initialize Apollo Client
+export const client = new ApolloClient({
+  link: httpLink,
+  cache: new InMemoryCache(),
+  // Disable caching during development
+  defaultOptions: {
+    watchQuery: {
+      fetchPolicy: 'cache-and-network',
+    },
+  },
+})

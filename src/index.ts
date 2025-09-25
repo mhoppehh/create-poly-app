@@ -66,7 +66,7 @@ async function main() {
 
     console.log('\n🎯 Creating project with features:', features.join(', '))
 
-    await scaffoldProject(projectName, projectPath, features, featureConfigurations)
+    await scaffoldProject(projectName, projectPath, features, featureConfigurations, allAnswers)
 
     console.log(`\n✅ Project "${projectName}" created successfully!`)
     console.log(`📁 Location: ${projectPath}`)

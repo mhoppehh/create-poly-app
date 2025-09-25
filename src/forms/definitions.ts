@@ -73,7 +73,55 @@ export const createPolyAppForm: Form = {
       id: 'frontend-setup',
       title: 'Frontend Configuration',
       description: 'Choose your frontend setup',
-      questions: [],
+      showIf: [
+        {
+          dependsOn: 'projectWorkspaces',
+          condition: { type: 'includes', value: 'react-webapp' },
+        },
+      ],
+      questions: [
+        {
+          id: 'graphqlClient',
+          type: 'select',
+          title: 'Which GraphQL client would you like to use?',
+          description: 'Choose the GraphQL client library for your frontend application',
+          required: false,
+          options: [
+            {
+              label: 'Apollo Client',
+              value: 'apollo-client',
+              description: 'The most popular React GraphQL client with comprehensive features',
+            },
+            {
+              label: 'URQL',
+              value: 'urql',
+              description: 'A lightweight, flexible GraphQL client with great caching',
+            },
+            {
+              label: 'Relay',
+              value: 'relay',
+              description: "Facebook's powerful GraphQL client with advanced features",
+            },
+            {
+              label: 'GraphQL Request',
+              value: 'graphql-request',
+              description: 'Simple GraphQL client with React Query integration',
+            },
+            {
+              label: 'None',
+              value: 'none',
+              description: 'Skip GraphQL client setup',
+            },
+          ],
+          defaultValue: 'apollo-client',
+          showIf: [
+            {
+              dependsOn: 'projectWorkspaces',
+              condition: { type: 'includes', value: 'graphql-server' },
+            },
+          ],
+        },
+      ],
     },
     {
       id: 'api-features',

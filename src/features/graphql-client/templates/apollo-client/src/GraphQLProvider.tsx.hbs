@@ -1,0 +1,11 @@
+import React from 'react'
+import { ApolloProvider } from '@apollo/client'
+import { client } from './apollo-client'
+
+interface GraphQLProviderProps {
+  children: React.ReactNode
+}
+
+export function GraphQLProvider({ children }: GraphQLProviderProps) {
+  return <ApolloProvider client={client}>{children}</ApolloProvider>
+}

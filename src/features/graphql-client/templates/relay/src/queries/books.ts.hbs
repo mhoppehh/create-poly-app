@@ -1,0 +1,10 @@
+import { graphql } from 'relay-runtime'
+
+export const GetBooksQuery = graphql`
+  query booksGetBooksQuery {
+    books {
+      title
+      author
+    }
+  }
+`
