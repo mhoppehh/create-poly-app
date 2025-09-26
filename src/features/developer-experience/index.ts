@@ -93,5 +93,14 @@ export const developerExperience: Feature = {
         'package.json': [addDevxScripts],
       },
     },
+    {
+      name: 'run-linting-formatting',
+      scripts: [
+        {
+          src: 'pnpm lint:fix && pnpm format:fix',
+          dir: '.',
+        },
+      ],
+    },
   ],
 }
