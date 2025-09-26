@@ -5,6 +5,7 @@ import { createLogger } from './logger'
 import { loadLoggingConfig } from './config'
 import { runForm } from './forms'
 import { createPolyAppForm } from './forms/definitions'
+import { createPresetLoadForm, createSavePresetPromptForm, defaultPresetManager } from './forms'
 import {
   selectFeaturesFromAnswers,
   getFeatureConfigurationQuestions,
@@ -23,11 +24,41 @@ async function main() {
   logger.infoFileOnly('main', 'Starting create-poly-app')
 
   try {
-    const answers = await runForm(createPolyAppForm, {
+    // Step 1: Check for existing presets and offer to load one
+    console.log('\n🚀 Welcome to Create Poly App!\n')
+
+    const presetLoadForm = await createPresetLoadForm(createPolyAppForm.id)
+    const presetChoice = await runForm(presetLoadForm, {
       validateOnChange: true,
-      autoSave: true,
-      saveKey: 'create-poly-app-state',
     })
+
+    let answers: Record<string, any>
+
+    // Step 2: Load preset or run main form
+    if (presetChoice.selectedPreset && presetChoice.selectedPreset !== 'none') {
+      // Load the selected preset
+      const preset = await defaultPresetManager.getPreset(presetChoice.selectedPreset)
+      if (preset) {
+        console.log(`\n📂 Loading preset: "${preset.name}"`)
+        answers = preset.answers
+        logger.infoFileOnly('main', 'Loaded preset: %s', preset.name)
+        logger.infoFileOnly('main', 'Preset answers: %o', answers)
+      } else {
+        console.log('\n❌ Failed to load preset, starting fresh...')
+        answers = await runForm(createPolyAppForm, {
+          validateOnChange: true,
+          autoSave: true,
+          saveKey: 'create-poly-app-state',
+        })
+      }
+    } else {
+      // Run the main form normally
+      answers = await runForm(createPolyAppForm, {
+        validateOnChange: true,
+        autoSave: true,
+        saveKey: 'create-poly-app-state',
+      })
+    }
 
     logger.infoFileOnly('main', 'User choices: %o', answers)
 
@@ -55,6 +86,7 @@ async function main() {
         validateOnChange: true,
         autoSave: true,
         saveKey: 'create-poly-app-config-state',
+        presetAnswers: answers,
       })
 
       allAnswers = { ...answers, ...configAnswers }
@@ -70,6 +102,57 @@ async function main() {
 
     console.log(`\n✅ Project "${projectName}" created successfully!`)
     console.log(`📁 Location: ${projectPath}`)
+
+    // Step 4: Offer to save as preset (only if we didn't load from a preset)
+    const usedPreset = presetChoice.selectedPreset && presetChoice.selectedPreset !== 'none'
+
+    if (!usedPreset) {
+      console.log('\n💾 Would you like to save your configuration as a preset for future use?')
+
+      try {
+        const savePrompt = createSavePresetPromptForm()
+        const saveChoice = await runForm(savePrompt, {
+          validateOnChange: true,
+        })
+
+        if (saveChoice.shouldSave) {
+          const { savePresetForm } = await import('./forms/definitions')
+          const presetDetails = await runForm(savePresetForm, {
+            validateOnChange: true,
+          })
+
+          const tags = presetDetails.presetTags
+            ? presetDetails.presetTags
+                .split(',')
+                .map((tag: string) => tag.trim())
+                .filter((tag: string) => tag.length > 0)
+            : undefined
+
+          const savedPreset = await defaultPresetManager.savePreset({
+            name: presetDetails.presetName,
+            description: presetDetails.presetDescription || undefined,
+            formId: createPolyAppForm.id,
+            answers: allAnswers,
+            tags,
+          })
+
+          if (savedPreset) {
+            console.log(`\n✨ Preset saved successfully as: "${savedPreset.name}"`)
+            console.log(`📝 You can reuse this configuration next time by selecting it from the preset list.`)
+            logger.infoFileOnly('main', 'Saved preset: %s', savedPreset.name)
+          } else {
+            console.log('\n⚠️  Failed to save preset')
+          }
+        }
+      } catch (saveError) {
+        // Don't fail the entire process if preset saving fails
+        console.log('\n⚠️  Preset saving was cancelled or failed')
+        logger.error('main', 'Preset saving failed: %s', saveError)
+      }
+    } else {
+      logger.infoFileOnly('main', 'Preset was used, skipping save prompt')
+    }
+
     console.log('\n🚀 Next steps:')
     console.log(`   cd ${projectName}`)
     console.log('   pnpm install')
