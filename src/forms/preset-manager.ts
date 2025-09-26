@@ -1,12 +1,16 @@
 import { Preset, PresetMetadata, PresetManagerOptions } from './types'
+import { promises as fs } from 'fs'
+import * as path from 'path'
+import { homedir } from 'os'
+import { loadPresetConfig } from '../config'
 
 export class PresetManager {
-  private storageKey: string
-  private maxPresets: number
+  private presetFilePath: string
+  private createDirectoryIfNotExists: boolean
 
   constructor(options: PresetManagerOptions = {}) {
-    this.storageKey = options.storageKey || 'form-presets'
-    this.maxPresets = options.maxPresets || 50
+    this.presetFilePath = options.presetFilePath || path.join(homedir(), '.create-poly-app', 'presets.json')
+    this.createDirectoryIfNotExists = options.createDirectoryIfNotExists ?? true
   }
 
   /**
@@ -14,10 +18,10 @@ export class PresetManager {
    */
   async savePreset(preset: Omit<Preset, 'id' | 'createdAt' | 'updatedAt'>): Promise<Preset> {
     const now = new Date().toISOString()
-    
+
     // Generate unique ID if not provided
     const id = `preset_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    
+
     const newPreset: Preset = {
       id,
       createdAt: now,
@@ -26,21 +30,10 @@ export class PresetManager {
     }
 
     const presets = await this.getAllPresets()
-    
-    // Remove oldest presets if we exceed the limit
-    if (presets.length >= this.maxPresets) {
-      const sortedByDate = presets.sort((a, b) => 
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      )
-      const toRemove = sortedByDate.slice(0, presets.length - this.maxPresets + 1)
-      for (const preset of toRemove) {
-        await this.deletePreset(preset.id)
-      }
-    }
 
     // Save the new preset
-    const updatedPresets = [...(await this.getAllPresets()), newPreset]
-    this.saveToStorage(updatedPresets)
+    const updatedPresets = [...presets, newPreset]
+    await this.saveToFile(updatedPresets)
 
     return newPreset
   }
@@ -51,7 +44,7 @@ export class PresetManager {
   async updatePreset(id: string, updates: Partial<Omit<Preset, 'id' | 'createdAt'>>): Promise<Preset | null> {
     const presets = await this.getAllPresets()
     const preset = presets.find(p => p.id === id)
-    
+
     if (!preset) {
       return null
     }
@@ -68,7 +61,7 @@ export class PresetManager {
 
     const index = presets.findIndex(p => p.id === id)
     presets[index] = updatedPreset
-    this.saveToStorage(presets)
+    await this.saveToFile(presets)
 
     return updatedPreset
   }
@@ -86,17 +79,20 @@ export class PresetManager {
    */
   async getAllPresets(): Promise<Preset[]> {
     try {
-      if (typeof localStorage === 'undefined') {
+      await this.ensurePresetFileExists()
+
+      const fileContent = await fs.readFile(this.presetFilePath, 'utf-8')
+      if (!fileContent.trim()) {
         return []
       }
 
-      const stored = localStorage.getItem(this.storageKey)
-      if (!stored) {
-        return []
-      }
-
-      return JSON.parse(stored) || []
+      const data = JSON.parse(fileContent)
+      return Array.isArray(data.presets) ? data.presets : []
     } catch (error) {
+      if ((error as any).code === 'ENOENT') {
+        // File doesn't exist, return empty array
+        return []
+      }
       console.warn('Failed to load presets:', error)
       return []
     }
@@ -116,15 +112,15 @@ export class PresetManager {
         updatedAt: preset.updatedAt,
         answerCount: Object.keys(preset.answers).length,
       }
-      
+
       if (preset.description !== undefined) {
         metadata.description = preset.description
       }
-      
+
       if (preset.tags !== undefined) {
         metadata.tags = preset.tags
       }
-      
+
       return metadata
     })
   }
@@ -143,12 +139,12 @@ export class PresetManager {
   async deletePreset(id: string): Promise<boolean> {
     const presets = await this.getAllPresets()
     const filteredPresets = presets.filter(p => p.id !== id)
-    
+
     if (filteredPresets.length === presets.length) {
       return false // Preset not found
     }
 
-    this.saveToStorage(filteredPresets)
+    await this.saveToFile(filteredPresets)
     return true
   }
 
@@ -159,9 +155,9 @@ export class PresetManager {
     const presets = await this.getAllPresets()
     const filteredPresets = presets.filter(p => p.formId !== formId)
     const deletedCount = presets.length - filteredPresets.length
-    
+
     if (deletedCount > 0) {
-      this.saveToStorage(filteredPresets)
+      await this.saveToFile(filteredPresets)
     }
 
     return deletedCount
@@ -171,9 +167,7 @@ export class PresetManager {
    * Clear all presets
    */
   async clearAllPresets(): Promise<void> {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(this.storageKey)
-    }
+    await this.saveToFile([])
   }
 
   /**
@@ -183,10 +177,11 @@ export class PresetManager {
     const presets = await this.getAllPresets()
     const searchTerm = query.toLowerCase()
 
-    return presets.filter(preset => 
-      preset.name.toLowerCase().includes(searchTerm) ||
-      preset.description?.toLowerCase().includes(searchTerm) ||
-      preset.tags?.some(tag => tag.toLowerCase().includes(searchTerm))
+    return presets.filter(
+      preset =>
+        preset.name.toLowerCase().includes(searchTerm) ||
+        preset.description?.toLowerCase().includes(searchTerm) ||
+        preset.tags?.some(tag => tag.toLowerCase().includes(searchTerm)),
     )
   }
 
@@ -195,11 +190,15 @@ export class PresetManager {
    */
   async exportPresets(): Promise<string> {
     const presets = await this.getAllPresets()
-    return JSON.stringify({
-      version: '1.0',
-      exportedAt: new Date().toISOString(),
-      presets,
-    }, null, 2)
+    return JSON.stringify(
+      {
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        presets,
+      },
+      null,
+      2,
+    )
   }
 
   /**
@@ -211,26 +210,18 @@ export class PresetManager {
       const importedPresets: Preset[] = data.presets || []
 
       if (!merge) {
-        this.saveToStorage(importedPresets)
+        await this.saveToFile(importedPresets)
         return importedPresets.length
       }
 
       // Merge with existing presets
       const existingPresets = await this.getAllPresets()
       const existingIds = new Set(existingPresets.map(p => p.id))
-      
+
       const newPresets = importedPresets.filter(p => !existingIds.has(p.id))
       const allPresets = [...existingPresets, ...newPresets]
 
-      // Apply max limit
-      if (allPresets.length > this.maxPresets) {
-        const sortedByDate = allPresets.sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
-        allPresets.splice(this.maxPresets)
-      }
-
-      this.saveToStorage(allPresets)
+      await this.saveToFile(allPresets)
       return newPresets.length
     } catch (error) {
       throw new Error(`Failed to import presets: ${error}`)
@@ -240,36 +231,73 @@ export class PresetManager {
   /**
    * Get storage usage information
    */
-  getStorageInfo(): { count: number; estimatedSize: string } {
+  getStorageInfo(): { count: number; estimatedSize: string; filePath: string } {
     try {
-      if (typeof localStorage === 'undefined') {
-        return { count: 0, estimatedSize: '0 KB' }
+      // For file-based storage, we'll read the file synchronously for this info method
+      const fs = require('fs')
+
+      if (!fs.existsSync(this.presetFilePath)) {
+        return { count: 0, estimatedSize: '0 KB', filePath: this.presetFilePath }
       }
 
-      const stored = localStorage.getItem(this.storageKey)
-      if (!stored) {
-        return { count: 0, estimatedSize: '0 KB' }
-      }
+      const fileContent = fs.readFileSync(this.presetFilePath, 'utf-8')
+      const data = JSON.parse(fileContent)
+      const presets = Array.isArray(data.presets) ? data.presets : []
 
-      const presets = JSON.parse(stored)
-      const sizeInBytes = new Blob([stored]).size
-      const sizeInKB = Math.round(sizeInBytes / 1024 * 100) / 100
+      const stats = fs.statSync(this.presetFilePath)
+      const sizeInKB = Math.round((stats.size / 1024) * 100) / 100
 
       return {
         count: presets.length,
         estimatedSize: `${sizeInKB} KB`,
+        filePath: this.presetFilePath,
       }
     } catch (error) {
-      return { count: 0, estimatedSize: 'Unknown' }
+      return { count: 0, estimatedSize: 'Unknown', filePath: this.presetFilePath }
     }
   }
 
-  private saveToStorage(presets: Preset[]): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(this.storageKey, JSON.stringify(presets))
+  /**
+   * Ensure the preset file and its directory exist
+   */
+  private async ensurePresetFileExists(): Promise<void> {
+    if (this.createDirectoryIfNotExists) {
+      const dir = path.dirname(this.presetFilePath)
+      await fs.mkdir(dir, { recursive: true })
     }
+
+    try {
+      await fs.access(this.presetFilePath)
+    } catch (error) {
+      // File doesn't exist, create an empty one
+      const initialData = {
+        version: '1.0',
+        createdAt: new Date().toISOString(),
+        presets: [],
+      }
+      await fs.writeFile(this.presetFilePath, JSON.stringify(initialData, null, 2), 'utf-8')
+    }
+  }
+
+  /**
+   * Save presets to file
+   */
+  private async saveToFile(presets: Preset[]): Promise<void> {
+    await this.ensurePresetFileExists()
+
+    const data = {
+      version: '1.0',
+      updatedAt: new Date().toISOString(),
+      presets,
+    }
+
+    await fs.writeFile(this.presetFilePath, JSON.stringify(data, null, 2), 'utf-8')
   }
 }
 
-// Export a default instance
-export const defaultPresetManager = new PresetManager()
+// Export a default instance configured with environment variables
+const presetConfig = loadPresetConfig()
+export const defaultPresetManager = new PresetManager({
+  presetFilePath: presetConfig.filePath,
+  createDirectoryIfNotExists: presetConfig.createDirectoryIfNotExists,
+})

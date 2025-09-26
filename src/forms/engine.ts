@@ -30,7 +30,7 @@ export class FormEngine {
 
     this.state = {
       formId: form.id,
-      answers: {},
+      answers: options.presetAnswers ? { ...options.presetAnswers } : {},
       currentGroupIndex: 0,
       isComplete: false,
       errors: {},

@@ -1,0 +1,33 @@
+{
+  "version": "1.0",
+  "updatedAt": "2025-09-26T17:46:57.350Z",
+  "presets": [
+    {
+      "id": "preset_1758908817349_9z3ym9piv",
+      "createdAt": "2025-09-26T17:46:57.349Z",
+      "updatedAt": "2025-09-26T17:46:57.349Z",
+      "name": "default",
+      "formId": "create-poly-app",
+      "answers": {
+        "projectName": "my-awesome-project",
+        "projectDescription": "",
+        "projectWorkspaces": [
+          "graphql-server",
+          "react-webapp"
+        ],
+        "graphqlClient": "apollo-client",
+        "apiFeatures": [
+          "database"
+        ],
+        "enableDevX": true,
+        "prisma.databaseProvider": "postgresql",
+        "prisma.enableStudio": true,
+        "graphql-client.graphqlEndpoint": "http://localhost:4000/graphql",
+        "developer-experience.includeAccessibility": true,
+        "developer-experience.includeImportSorting": true,
+        "developer-experience.enableConventionalCommits": true,
+        "developer-experience.enableSemanticRelease": true
+      }
+    }
+  ]
+}

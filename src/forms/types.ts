@@ -141,6 +141,7 @@ export interface FormEngineOptions {
   validateOnBlur?: boolean
   autoSave?: boolean
   saveKey?: string
+  presetAnswers?: Record<string, any>
 }
 
 // Preset System Types
@@ -168,5 +169,6 @@ export interface PresetMetadata {
 
 export interface PresetManagerOptions {
   storageKey?: string
-  maxPresets?: number
+  presetFilePath?: string
+  createDirectoryIfNotExists?: boolean
 }

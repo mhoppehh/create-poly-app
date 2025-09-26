@@ -86,6 +86,7 @@ async function main() {
         validateOnChange: true,
         autoSave: true,
         saveKey: 'create-poly-app-config-state',
+        presetAnswers: answers,
       })
 
       allAnswers = { ...answers, ...configAnswers }
@@ -103,7 +104,11 @@ async function main() {
     console.log(`📁 Location: ${projectPath}`)
 
     // Step 4: Offer to save as preset (only if we didn't load from a preset)
-    if (!presetChoice.selectedPreset || presetChoice.selectedPreset === 'none') {
+    const usedPreset = presetChoice.selectedPreset && presetChoice.selectedPreset !== 'none'
+
+    if (!usedPreset) {
+      console.log('\n💾 Would you like to save your configuration as a preset for future use?')
+
       try {
         const savePrompt = createSavePresetPromptForm()
         const saveChoice = await runForm(savePrompt, {
@@ -132,7 +137,8 @@ async function main() {
           })
 
           if (savedPreset) {
-            console.log(`\n💾 Preset saved as: "${savedPreset.name}"`)
+            console.log(`\n✨ Preset saved successfully as: "${savedPreset.name}"`)
+            console.log(`📝 You can reuse this configuration next time by selecting it from the preset list.`)
             logger.infoFileOnly('main', 'Saved preset: %s', savedPreset.name)
           } else {
             console.log('\n⚠️  Failed to save preset')
@@ -143,6 +149,8 @@ async function main() {
         console.log('\n⚠️  Preset saving was cancelled or failed')
         logger.error('main', 'Preset saving failed: %s', saveError)
       }
+    } else {
+      logger.infoFileOnly('main', 'Preset was used, skipping save prompt')
     }
 
     console.log('\n🚀 Next steps:')

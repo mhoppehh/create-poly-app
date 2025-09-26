@@ -53,6 +53,13 @@ export class FormRenderer {
       const groupAnswers: Record<string, any> = {}
 
       for (const question of questions) {
+        const existingAnswer = this.engine.getAnswer(question.id)
+
+        if (existingAnswer !== undefined) {
+          groupAnswers[question.id] = existingAnswer
+          continue
+        }
+
         const promptQuestion = this.questionToPrompt(question)
 
         try {
