@@ -2,8 +2,19 @@ import { FEATURES } from '../features'
 import type { Feature, FeatureActivationCondition, FeatureActivationRule } from '../types'
 import type { Question, QuestionGroup } from './types'
 
-export function evaluateCondition(condition: FeatureActivationCondition, answers: Record<string, any>): boolean {
-  const value = answers[condition.questionId]
+export function evaluateCondition(
+  condition: FeatureActivationCondition,
+  answers: Record<string, any>,
+  currentFeatureId?: string,
+): boolean {
+  const { questionId } = condition
+  let value = answers[questionId]
+
+  // If the direct key doesn't exist and we have a current feature, try the prefixed version
+  if (value === undefined && currentFeatureId) {
+    const prefixedKey = `${currentFeatureId}.${questionId}`
+    value = answers[prefixedKey]
+  }
 
   switch (condition.condition.type) {
     case 'equals':
@@ -24,15 +35,16 @@ export function evaluateCondition(condition: FeatureActivationCondition, answers
 export function evaluateRule(
   rule: FeatureActivationRule | FeatureActivationCondition,
   answers: Record<string, any>,
+  currentFeatureId?: string,
 ): boolean {
   if ('questionId' in rule) {
-    return evaluateCondition(rule, answers)
+    return evaluateCondition(rule, answers, currentFeatureId)
   }
 
   if (rule.type === 'and') {
-    return rule.conditions.every(condition => evaluateRule(condition, answers))
+    return rule.conditions.every(condition => evaluateRule(condition, answers, currentFeatureId))
   } else if (rule.type === 'or') {
-    return rule.conditions.some(condition => evaluateRule(condition, answers))
+    return rule.conditions.some(condition => evaluateRule(condition, answers, currentFeatureId))
   }
 
   return false

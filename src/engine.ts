@@ -21,10 +21,13 @@ handlebars.registerHelper('ne', function (a: any, b: any) {
 })
 
 handlebars.registerHelper('if_eq', function (this: any, a: any, b: any, options: any) {
-  if (a === b) {
-    return options.fn(this)
-  }
-  return options.inverse(this)
+  return a === b ? options.fn(this) : options.inverse(this)
+})
+
+handlebars.registerHelper('hasFeature', function (this: any, featureName: string, options: any) {
+  const context = options.data.root
+  const enabledFeatures = context.enabledFeatures || []
+  return enabledFeatures.includes(featureName) ? options.fn(this) : options.inverse(this)
 })
 
 function sortFeatures(featureIds: string[]): string[] {
@@ -258,7 +261,12 @@ export async function scaffoldProject(
     templates?: any,
     mods?: any,
   ) {
-    const args = { projectName, projectDir }
+    const args = {
+      projectName,
+      projectDir,
+      enabledFeatures: sortedIds,
+      allAnswers,
+    }
 
     logger.stageProcessing(featureName, stageName)
     await runScripts(scripts, args, featureName, featureConfig)
@@ -278,7 +286,7 @@ export async function scaffoldProject(
     if (feature.stages && feature.stages.length > 0) {
       for (const stage of feature.stages) {
         if (stage.activatedBy) {
-          const shouldActivate = evaluateRule(stage.activatedBy, allAnswers)
+          const shouldActivate = evaluateRule(stage.activatedBy, allAnswers, feature.id)
           if (!shouldActivate) {
             logger.infoFileOnly(feature.name, 'Skipping stage "%s" - activation condition not met', stage.name)
             logger.infoFileOnly(feature.name, 'Stage activation debug - allAnswers: %o', allAnswers)
