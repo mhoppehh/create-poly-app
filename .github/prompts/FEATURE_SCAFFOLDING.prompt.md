@@ -85,6 +85,65 @@ Features execute in stages that can include:
 - **scripts**: Shell commands to run
 - **templates**: Handlebars files to process and copy
 - **mods**: Code modifications using ts-morph
+- **activatedBy**: Conditional activation rules that determine if the stage should run
+
+#### Stage Activation System
+
+Stages can be conditionally activated based on user inputs through the `activatedBy` property. This allows features to include optional functionality or different implementations based on user preferences.
+
+**Stage Structure:**
+
+```typescript
+{
+  name: 'stage-name',
+  activatedBy?: FeatureActivationRule | FeatureActivationCondition,
+  scripts?: InstallScript[],
+  templates?: InstallTemplate[],
+  mods?: Record<string, CodeMod[]>
+}
+```
+
+**Activation Conditions:**
+
+- `ActivationConditions.equals(questionId, value)` - Activates when answer equals specific value
+- `ActivationConditions.includesValue(questionId, value)` - Activates when array answer includes value
+- `ActivationConditions.isOneOf(questionId, values)` - Activates when answer is one of provided values
+- `ActivationConditions.custom(questionId, evaluator)` - Custom evaluation function
+
+**Activation Rules (for complex logic):**
+
+- `ActivationRules.and(...conditions)` - All conditions must be true
+- `ActivationRules.or(...conditions)` - At least one condition must be true
+
+**Examples:**
+
+```typescript
+// Simple condition - only run if GraphQL client is Apollo
+{
+  name: 'setup-apollo-client',
+  activatedBy: ActivationConditions.equals('graphqlClient', 'apollo-client'),
+  scripts: [{ src: 'pnpm install @apollo/client', dir: 'web' }]
+}
+
+// Complex condition - run if both conditions are met
+{
+  name: 'setup-advanced-features',
+  activatedBy: ActivationRules.and(
+    ActivationConditions.includesValue('features', 'advanced-mode'),
+    ActivationConditions.equals('databaseProvider', 'postgresql')
+  ),
+  scripts: [{ src: 'pnpm install advanced-pg-features', dir: 'api' }]
+}
+
+// Custom evaluation
+{
+  name: 'conditional-setup',
+  activatedBy: ActivationConditions.custom('customField', (value, allAnswers) => {
+    return value === 'special' && allAnswers.environment === 'production'
+  }),
+  templates: [{ source: 'templates/production', destination: 'config' }]
+}
+```
 
 ### Templates
 
@@ -98,6 +157,67 @@ Features execute in stages that can include:
 - **Use sparingly**: Only when terminal commands or templates cannot achieve the desired result
 
 ## Implementation Strategy
+
+### Stage Activation Strategy
+
+When designing features with multiple stages, consider using conditional activation to:
+
+1. **Support multiple implementations**: Different GraphQL clients, database providers, or styling frameworks
+2. **Enable optional features**: Advanced configurations, development tools, or integrations
+3. **Environment-specific setup**: Different configurations for development vs production
+4. **User preference customization**: Allow users to opt-in/out of specific functionality
+
+**Best Practices for Stage Activation:**
+
+- **Use descriptive stage names** that clearly indicate what functionality they provide
+- **Group related functionality** in single stages rather than splitting unnecessarily
+- **Consider dependencies** between stages when using activation conditions
+- **Test activation logic** by ensuring all combinations of user inputs work correctly
+- **Document activation requirements** in feature descriptions and comments
+
+**Common Activation Patterns:**
+
+```typescript
+// Multiple implementation pattern (GraphQL clients)
+stages: [
+  {
+    name: 'setup-apollo-client',
+    activatedBy: ActivationConditions.equals('graphqlClient', 'apollo-client'),
+    // Apollo-specific setup
+  },
+  {
+    name: 'setup-urql',
+    activatedBy: ActivationConditions.equals('graphqlClient', 'urql'),
+    // URQL-specific setup
+  },
+]
+
+// Optional feature pattern
+stages: [
+  {
+    name: 'basic-setup',
+    // Always runs - no activatedBy
+    scripts: [{ src: 'npm install core-package' }],
+  },
+  {
+    name: 'enable-advanced-features',
+    activatedBy: ActivationConditions.equals('enableAdvanced', true),
+    scripts: [{ src: 'npm install advanced-package' }],
+  },
+]
+
+// Conditional dependency pattern
+stages: [
+  {
+    name: 'setup-database-with-auth',
+    activatedBy: ActivationRules.and(
+      ActivationConditions.includesValue('features', 'database'),
+      ActivationConditions.includesValue('features', 'authentication'),
+    ),
+    scripts: [{ src: 'npm install auth-db-integration' }],
+  },
+]
+```
 
 ### When to Use Terminal Commands (Preferred)
 
@@ -161,10 +281,23 @@ When creating new features:
 
 1. **Use descriptive names** in kebab-case (e.g., `stripe-payments`, `user-auth`)
 2. **Include dependencies** if your feature builds on others
-3. **Prefer terminal commands over codemods** when possible (e.g., use `pnpm install package` instead of manually modifying package.json)
-4. **Use templates for all new files** unless the file can be created via terminal commands (e.g., configuration files, source code)
-5. **Add codemods only when necessary** for complex file modifications that can't be achieved via terminal commands
-6. **Follow the existing patterns** in other features for consistency
+3. **Plan for conditional functionality** using stage activation when features have multiple implementations or optional components
+4. **Design activation logic carefully** to ensure all user input combinations are handled properly
+5. **Prefer terminal commands over codemods** when possible (e.g., use `pnpm install package` instead of manually modifying package.json)
+6. **Use templates for all new files** unless the file can be created via terminal commands (e.g., configuration files, source code)
+7. **Add codemods only when necessary** for complex file modifications that can't be achieved via terminal commands
+8. **Follow the existing patterns** in other features for consistency
+9. **Test activation conditions** by considering different user input scenarios
+10. **Document stage purpose** with clear, descriptive stage names and comments
+
+### Stage Activation Guidelines
+
+- **Always activate stages**: Stages without `activatedBy` run unconditionally when the feature is enabled
+- **Conditional stages**: Use `activatedBy` for stages that should only run under specific conditions
+- **Complex conditions**: Use `ActivationRules.and()` and `ActivationRules.or()` for multi-condition logic
+- **Custom logic**: Use `ActivationConditions.custom()` for complex evaluation scenarios
+- **Question dependencies**: Ensure activation questions are defined in the feature's `configuration` array
+- **Logical grouping**: Group related setup steps in single stages rather than splitting unnecessarily
 
 ### Rule Priority
 

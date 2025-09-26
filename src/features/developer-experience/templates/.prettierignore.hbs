@@ -1,0 +1,35 @@
+# Prettier ignore patterns
+node_modules/
+dist/
+build/
+coverage/
+*.min.js
+*.bundle.js
+public/
+.next/
+.nuxt/
+.vuepress/dist/
+
+# Generated files
+*.d.ts
+CHANGELOG.md
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+{{#hasFeature 'prisma'}}
+# Prisma generated files
+api/generated/prisma/
+{{/hasFeature}}
+
+# IDE and system files
+.DS_Store
+.vscode/
+.idea/
+
+# Environment files
+.env*
+
+# Documentation that shouldn't be formatted
+docs/api/
+*.generated.*

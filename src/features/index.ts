@@ -4,13 +4,15 @@ import { tailwind } from './tailwind'
 import { apolloServer } from './apollo-server'
 import type { Feature } from '../types'
 import { prisma } from './prisma'
-import { graphqlClient } from "./graphql-client";
+import { graphqlClient } from './graphql-client'
+import { developerExperience } from './developer-experience'
 
 export const FEATURES: Record<string, Feature> = {
-          projectDir,
-          vite,
-          tailwind,
-          'apollo-server': apolloServer,
-          prisma: prisma,
-          'graphql-client': graphqlClient,
-        }
+  projectDir,
+  vite,
+  tailwind,
+  'apollo-server': apolloServer,
+  prisma: prisma,
+  'graphql-client': graphqlClient,
+  'developer-experience': developerExperience,
+}
