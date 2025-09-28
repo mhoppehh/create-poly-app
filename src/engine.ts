@@ -9,6 +9,11 @@ import { CodeMod, InstallScript, InstallTemplate } from './types'
 import { FEATURES } from './features/index'
 import { getLogger } from './logger'
 import { evaluateRule } from './forms/feature-selector'
+import {
+  DependencyManager,
+  type DependencyAddition,
+  type ProcessedDependencyAddition,
+} from './dependency-manager/module'
 
 // Register Handlebars helpers
 handlebars.registerHelper('eq', function (a: any, b: any) {
@@ -73,6 +78,59 @@ export async function scaffoldProject(
 
   const sortedIds = sortFeatures(featureIds)
   const features = sortedIds.map(id => FEATURES[id])
+
+  const dependencyManager = new DependencyManager(projectDir)
+
+  async function runDependencies(
+    dependencies: DependencyAddition[] | undefined,
+    featureName: string,
+    featureConfig: Record<string, any> = {},
+  ) {
+    if (!dependencies || dependencies.length === 0) return
+
+    logger.info(featureName, 'Installing %d dependency entries...', dependencies.length)
+
+    try {
+      // Expand dependencies with array names into individual dependency objects
+      const expandedDependencies: ProcessedDependencyAddition[] = dependencies.flatMap(dep => {
+        const names = Array.isArray(dep.name) ? dep.name : [dep.name]
+        return names.map(name => ({
+          ...dep,
+          name,
+          workspace:
+            typeof dep.workspace === 'string'
+              ? dep.workspace.replace(/{{(\w+)}}/g, (match, key) => {
+                  return featureConfig[key] || match
+                })
+              : dep.workspace,
+        }))
+      })
+
+      logger.info(featureName, 'Installing %d individual dependencies...', expandedDependencies.length)
+
+      await dependencyManager.addDependencies(expandedDependencies)
+      logger.info(featureName, '✓ Dependencies installed successfully')
+
+      logger.info(featureName, 'Running pnpm install to make dependencies available...')
+      try {
+        const result = execSync('pnpm install', {
+          cwd: projectDir,
+          stdio: ['inherit', 'pipe', 'pipe'],
+          encoding: 'utf8',
+        })
+
+        if (result) {
+          logger.infoFileOnly(featureName, 'pnpm install output: %s', result)
+        }
+        logger.info(featureName, '✓ pnpm install completed successfully')
+      } catch (installError: any) {
+        logger.warn(featureName, 'pnpm install failed but continuing: %s', installError.message)
+      }
+    } catch (error) {
+      logger.error(featureName, 'Failed to install dependencies: %s', error)
+      throw error
+    }
+  }
 
   async function runScripts(
     scripts: InstallScript[] | undefined,
@@ -259,6 +317,7 @@ export async function scaffoldProject(
     scripts?: any[],
     templates?: any,
     mods?: any,
+    dependencies?: DependencyAddition[],
   ) {
     const args = {
       projectName,
@@ -268,6 +327,8 @@ export async function scaffoldProject(
     }
 
     logger.stageProcessing(featureName, stageName)
+
+    await runDependencies(dependencies, featureName, featureConfig)
     await runScripts(scripts, args, featureName, featureConfig)
     await copyTemplates(templates, args, featureName, featureConfig)
     await runMods(mods, featureName, featureConfig)
@@ -294,7 +355,15 @@ export async function scaffoldProject(
           }
         }
 
-        await processStage(stage.name, feature.name, featureConfig, stage.scripts, stage.templates, stage.mods)
+        await processStage(
+          stage.name,
+          feature.name,
+          featureConfig,
+          stage.scripts,
+          stage.templates,
+          stage.mods,
+          stage.dependencies,
+        )
       }
     } else {
       logger.warn(feature.name, 'No stages defined for feature: %s', feature.name)

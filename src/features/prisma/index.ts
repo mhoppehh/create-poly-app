@@ -54,7 +54,10 @@ export const prisma: Feature = {
   stages: [
     {
       name: 'install-prisma-dependencies',
-      scripts: [{ src: 'pnpm install prisma', dir: 'api' }],
+      dependencies: [
+        { name: 'prisma', workspace: 'api', type: 'devDependencies' },
+        { name: '@prisma/client', workspace: 'api', type: 'dependencies' },
+      ],
     },
     {
       name: 'setup-prisma-files',

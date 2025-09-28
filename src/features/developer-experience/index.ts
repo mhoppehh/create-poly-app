@@ -41,40 +41,66 @@ export const developerExperience: Feature = {
   stages: [
     {
       name: 'install-core-dependencies',
-      scripts: [
+      dependencies: [
         {
-          src: 'pnpm add -D -w @eslint/js @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint eslint-plugin-react-hooks eslint-plugin-react-refresh prettier globals',
-          dir: '.',
+          name: [
+            '@eslint/js',
+            '@typescript-eslint/eslint-plugin',
+            '@typescript-eslint/parser',
+            'eslint',
+            'eslint-plugin-react-hooks',
+            'eslint-plugin-react-refresh',
+            'prettier',
+            'globals',
+          ],
+          workspace: 'root',
+          type: 'devDependencies',
         },
       ],
     },
     {
       name: 'install-accessibility-tools',
       activatedBy: ActivationConditions.equals('includeAccessibility', true),
-      scripts: [{ src: 'pnpm add -D -w eslint-plugin-jsx-a11y', dir: '.' }],
+      dependencies: [{ name: 'eslint-plugin-jsx-a11y', workspace: 'root', type: 'devDependencies' }],
     },
     {
       name: 'install-import-sorting-tools',
       activatedBy: ActivationConditions.equals('includeImportSorting', true),
-      scripts: [
+      dependencies: [
         {
-          src: 'pnpm add -D -w eslint-plugin-import prettier-plugin-organize-imports prettier-plugin-packagejson',
-          dir: '.',
+          name: ['eslint-plugin-import', 'prettier-plugin-organize-imports', 'prettier-plugin-packagejson'],
+          workspace: 'root',
+          type: 'devDependencies',
         },
       ],
     },
     {
       name: 'install-git-hooks-and-conventional-commits',
       activatedBy: ActivationConditions.equals('enableConventionalCommits', true),
-      scripts: [{ src: 'pnpm add -D -w lint-staged @commitlint/cli @commitlint/config-conventional', dir: '.' }],
+      dependencies: [
+        {
+          name: ['lint-staged', '@commitlint/cli', '@commitlint/config-conventional'],
+          workspace: 'root',
+          type: 'devDependencies',
+        },
+      ],
     },
     {
       name: 'install-semantic-release',
       activatedBy: ActivationConditions.equals('enableSemanticRelease', true),
-      scripts: [
+      dependencies: [
         {
-          src: 'pnpm add -D -w semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github @semantic-release/npm @semantic-release/commit-analyzer @semantic-release/release-notes-generator',
-          dir: '.',
+          name: [
+            'semantic-release',
+            '@semantic-release/changelog',
+            '@semantic-release/git',
+            '@semantic-release/github',
+            '@semantic-release/npm',
+            '@semantic-release/commit-analyzer',
+            '@semantic-release/release-notes-generator',
+          ],
+          workspace: 'root',
+          type: 'devDependencies',
         },
       ],
     },

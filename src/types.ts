@@ -1,4 +1,5 @@
 import type { Question } from './forms/types'
+import type { DependencyAddition } from './dependency-manager/types'
 
 export type CodeMod = (filePath: string, config?: Record<string, any>) => void | Promise<void>
 
@@ -20,6 +21,7 @@ export interface InstallScript {
 export interface FeatureStage {
   name: string
   scripts?: InstallScript[]
+  dependencies?: DependencyAddition[]
   templates?: InstallTemplates
   mods?: Record<string, CodeMod[]>
 

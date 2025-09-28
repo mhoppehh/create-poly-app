@@ -58,11 +58,17 @@ export const graphqlClient: Feature = {
     {
       name: 'setup-apollo-client',
       activatedBy: ActivationConditions.equals('graphqlClient', 'apollo-client'),
-      scripts: [
-        { src: 'pnpm install @apollo/client graphql', dir: 'web' },
+      dependencies: [
+        { name: ['@apollo/client', 'graphql'], workspace: 'web', type: 'dependencies' },
         {
-          src: 'pnpm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations @graphql-codegen/typescript-react-apollo',
-          dir: 'web',
+          name: [
+            '@graphql-codegen/cli',
+            '@graphql-codegen/typescript',
+            '@graphql-codegen/typescript-operations',
+            '@graphql-codegen/typescript-react-apollo',
+          ],
+          workspace: 'web',
+          type: 'devDependencies',
         },
       ],
       templates: [
@@ -82,11 +88,17 @@ export const graphqlClient: Feature = {
     {
       name: 'setup-urql',
       activatedBy: ActivationConditions.equals('graphqlClient', 'urql'),
-      scripts: [
-        { src: 'pnpm install urql graphql', dir: 'web' },
+      dependencies: [
+        { name: ['urql', 'graphql'], workspace: 'web', type: 'dependencies' },
         {
-          src: 'pnpm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations @graphql-codegen/typescript-urql',
-          dir: 'web',
+          name: [
+            '@graphql-codegen/cli',
+            '@graphql-codegen/typescript',
+            '@graphql-codegen/typescript-operations',
+            '@graphql-codegen/typescript-urql',
+          ],
+          workspace: 'web',
+          type: 'devDependencies',
         },
       ],
       templates: [
@@ -106,9 +118,13 @@ export const graphqlClient: Feature = {
     {
       name: 'setup-relay',
       activatedBy: ActivationConditions.equals('graphqlClient', 'relay'),
-      scripts: [
-        { src: 'pnpm install react-relay relay-runtime', dir: 'web' },
-        { src: 'pnpm install -D relay-compiler @types/react-relay @types/relay-runtime', dir: 'web' },
+      dependencies: [
+        { name: ['react-relay', 'relay-runtime'], workspace: 'web', type: 'dependencies' },
+        {
+          name: ['relay-compiler', '@types/react-relay', '@types/relay-runtime'],
+          workspace: 'web',
+          type: 'devDependencies',
+        },
       ],
       templates: [
         {
@@ -128,11 +144,12 @@ export const graphqlClient: Feature = {
     {
       name: 'setup-graphql-request',
       activatedBy: ActivationConditions.equals('graphqlClient', 'graphql-request'),
-      scripts: [
-        { src: 'pnpm install graphql-request graphql @tanstack/react-query', dir: 'web' },
+      dependencies: [
+        { name: ['graphql-request', 'graphql', '@tanstack/react-query'], workspace: 'web', type: 'dependencies' },
         {
-          src: 'pnpm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations',
-          dir: 'web',
+          name: ['@graphql-codegen/cli', '@graphql-codegen/typescript', '@graphql-codegen/typescript-operations'],
+          workspace: 'web',
+          type: 'devDependencies',
         },
       ],
       templates: [

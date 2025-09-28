@@ -17,7 +17,7 @@ export const tailwind: Feature = {
   stages: [
     {
       name: 'install-tailwind',
-      scripts: [{ src: 'pnpm install tailwindcss @tailwindcss/vite', dir: 'web' }],
+      dependencies: [{ name: ['tailwindcss', '@tailwindcss/vite'], workspace: 'web', type: 'devDependencies' }],
     },
     {
       name: 'configure-tailwind',
