@@ -245,3 +245,54 @@ export const feedbackForm: Form = {
     },
   ],
 }
+
+// Preset Management Forms
+
+export const savePresetForm: Form = {
+  id: 'save-preset',
+  title: '💾 Save Preset',
+  description: 'Save your current form answers as a reusable preset',
+  settings: {
+    allowBack: true,
+    showProgress: false,
+    submitLabel: 'Save Preset',
+    cancelLabel: 'Cancel',
+  },
+  groups: [
+    {
+      id: 'preset-details',
+      title: 'Preset Information',
+      questions: [
+        {
+          id: 'presetName',
+          type: 'text',
+          title: 'Preset Name',
+          description: 'Give your preset a memorable name',
+          required: true,
+          placeholder: 'My Project Setup',
+          validation: [
+            { type: 'required', message: 'Preset name is required' },
+            { type: 'minLength', value: 1, message: 'Preset name cannot be empty' },
+            { type: 'maxLength', value: 100, message: 'Preset name must be less than 100 characters' },
+          ],
+        },
+        {
+          id: 'presetDescription',
+          type: 'text',
+          title: 'Description (Optional)',
+          description: 'Describe what this preset is for',
+          required: false,
+          placeholder: 'Full-stack app with GraphQL and database',
+        },
+        {
+          id: 'presetTags',
+          type: 'text',
+          title: 'Tags (Optional)',
+          description: 'Comma-separated tags to help organize presets',
+          required: false,
+          placeholder: 'fullstack, graphql, database',
+        },
+      ],
+    },
+  ],
+}
