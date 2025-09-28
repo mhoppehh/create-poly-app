@@ -1,0 +1,372 @@
+name: E2E Testing Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of tests to run'
+        required: true
+        default: 'smoke'
+        type: choice
+        options:
+          - smoke
+          - integration
+          - full
+      node_version:
+        description: 'Node.js version to test'
+        required: false
+        default: '18'
+        type: choice
+        options:
+          - '18'
+          - '20'
+          - 'both'
+
+jobs:
+  # Fast tests that run on every push
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [24]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Run unit tests
+        run: pnpm test:unit
+        env:
+          NODE_ENV: test
+
+      - name: Upload unit test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results-node${{ matrix.node-version }}
+          path: |
+            coverage/
+            test-results/
+          retention-days: 7
+
+  # Snapshot tests - validate generated project structures
+  snapshot-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project
+        run: pnpm build
+
+      - name: Run snapshot tests
+        run: pnpm test:snapshots
+        timeout-minutes: 15
+        env:
+          NODE_ENV: test
+
+      - name: Upload snapshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: snapshot-results
+          path: |
+            tests/snapshots/
+            test-results/snapshots/
+          retention-days: 30
+
+  # Smoke tests - quick validation of core functionality
+  smoke-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.test_type == 'smoke' || github.event.inputs.test_type == 'full'))
+
+    strategy:
+      matrix:
+        node-version: ['18', '20']
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project
+        run: pnpm build
+
+      - name: Run smoke tests
+        run: pnpm test:e2e
+        timeout-minutes: 30
+        env:
+          NODE_ENV: test
+
+      - name: Upload smoke test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-test-results-node${{ matrix.node-version }}
+          path: |
+            test-results/e2e/
+            /tmp/create-poly-app-tests/
+          retention-days: 7
+
+  # Docker-based integration tests
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: smoke-tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.test_type == 'integration' || github.event.inputs.test_type == 'full'))
+
+    strategy:
+      matrix:
+        test-scenario:
+          - smoke-tests
+          - integration-tests
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build test Docker images
+        run: |
+          docker-compose -f tests/integration/docker-compose.yml build
+
+      - name: Run ${{ matrix.test-scenario }}
+        run: |
+          docker-compose -f tests/integration/docker-compose.yml run --rm ${{ matrix.test-scenario }}
+        timeout-minutes: 45
+
+      - name: Collect test results
+        if: always()
+        run: |
+          # Copy results from Docker volumes
+          mkdir -p integration-results
+          docker-compose -f tests/integration/docker-compose.yml run --rm --entrypoint="" ${{ matrix.test-scenario }} \
+            tar czf - /test-workspace/results /test-workspace/smoke-results 2>/dev/null | tar xzf - -C integration-results/ || true
+
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results-${{ matrix.test-scenario }}
+          path: integration-results/
+          retention-days: 7
+
+      - name: Cleanup Docker resources
+        if: always()
+        run: |
+          docker-compose -f tests/integration/docker-compose.yml down -v --remove-orphans
+
+  # Cross-platform tests
+  cross-platform-tests:
+    runs-on: ${{ matrix.os }}
+    needs: smoke-tests
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.test_type == 'full')
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [18, 20]
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project
+        run: pnpm build
+
+      - name: Run cross-platform smoke tests
+        run: pnpm test:e2e
+        timeout-minutes: 30
+        env:
+          NODE_ENV: test
+
+      - name: Upload cross-platform results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cross-platform-results-${{ matrix.os }}-node${{ matrix.node-version }}
+          path: |
+            test-results/
+          retention-days: 7
+
+  # Performance benchmarks
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: smoke-tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project
+        run: pnpm build
+
+      - name: Run performance tests
+        run: |
+          # Run performance-focused subset of tests
+          pnpm test:e2e --reporter=json > performance-results.json
+        timeout-minutes: 20
+        env:
+          NODE_ENV: test
+
+      - name: Process performance results
+        run: |
+          # Extract performance metrics from test results
+          node -e "
+            const results = require('./performance-results.json');
+            const performanceData = results.testResults.map(test => ({
+              name: test.name,
+              duration: test.duration,
+              status: test.status
+            }));
+            require('fs').writeFileSync('performance-summary.json', JSON.stringify(performanceData, null, 2));
+          " || echo "No performance data to process"
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: |
+            performance-results.json
+            performance-summary.json
+          retention-days: 30
+
+  # Test results summary
+  test-summary:
+    runs-on: ubuntu-latest
+    needs: [unit-tests, snapshot-tests, smoke-tests]
+    if: always()
+
+    steps:
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: all-test-results
+
+      - name: Generate test summary
+        run: |
+          echo "# Test Results Summary" > test-summary.md
+          echo "" >> test-summary.md
+          echo "## Test Status" >> test-summary.md
+          echo "" >> test-summary.md
+
+          if [ "${{ needs.unit-tests.result }}" == "success" ]; then
+            echo "✅ Unit Tests: Passed" >> test-summary.md
+          else
+            echo "❌ Unit Tests: Failed" >> test-summary.md
+          fi
+
+          if [ "${{ needs.snapshot-tests.result }}" == "success" ]; then
+            echo "✅ Snapshot Tests: Passed" >> test-summary.md
+          else
+            echo "❌ Snapshot Tests: Failed" >> test-summary.md
+          fi
+
+          if [ "${{ needs.smoke-tests.result }}" == "success" ]; then
+            echo "✅ Smoke Tests: Passed" >> test-summary.md
+          else
+            echo "❌ Smoke Tests: Failed" >> test-summary.md
+          fi
+
+          echo "" >> test-summary.md
+          echo "## Test Artifacts" >> test-summary.md
+          echo "" >> test-summary.md
+          echo "Test results and artifacts are available in the workflow artifacts section." >> test-summary.md
+
+      - name: Comment test summary on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('test-summary.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+      - name: Upload test summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-summary
+          path: test-summary.md
+          retention-days: 30
