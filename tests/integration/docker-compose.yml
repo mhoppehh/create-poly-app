@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Full integration tests
+  integration-tests:
+    build:
+      context: ../..
+      dockerfile: tests/integration/Dockerfile
+      target: integration-tester
+    volumes:
+      - integration-results:/test-workspace/results
+    environment:
+      - NODE_ENV=test
+      - CI=true
+    command: ['./test-scripts/run-all-tests.sh']
+
+  # Smoke tests (faster subset)
+  smoke-tests:
+    build:
+      context: ../..
+      dockerfile: tests/integration/Dockerfile
+      target: smoke-tester
+    volumes:
+      - smoke-results:/test-workspace/smoke-results
+    environment:
+      - NODE_ENV=test
+      - CI=true
+    command: ['./test-scripts/run-smoke-tests.sh']
+
+  # Test runner with multiple Node.js versions
+  test-node-18:
+    build:
+      context: ../..
+      dockerfile: tests/integration/Dockerfile
+      target: integration-tester
+    volumes:
+      - node18-results:/test-workspace/results
+    environment:
+      - NODE_ENV=test
+      - CI=true
+      - NODE_VERSION=18
+
+  test-node-20:
+    build:
+      context: ../..
+      dockerfile: tests/integration/Dockerfile
+    image: node:20-alpine
+    volumes:
+      - ../..:/app
+      - node20-results:/test-workspace/results
+    working_dir: /app
+    environment:
+      - NODE_ENV=test
+      - CI=true
+      - NODE_VERSION=20
+    command: >
+      sh -c "
+        apk add --no-cache git python3 make g++ jq &&
+        npm install -g pnpm &&
+        pnpm install &&
+        pnpm build &&
+        ln -sf /app/dist/main.cjs /usr/local/bin/create-poly-app &&
+        mkdir -p /test-workspace &&
+        cp -r tests/integration/docker /test-workspace/test-scripts &&
+        chmod +x /test-workspace/test-scripts/*.sh &&
+        cd /test-workspace &&
+        ./test-scripts/run-smoke-tests.sh
+      "
+
+volumes:
+  integration-results:
+  smoke-results:
+  node18-results:
+  node20-results:
