@@ -1,0 +1,53 @@
+import { PermissionsAndroid, Platform } from 'react-native';
+import { PERMISSIONS, request, check, RESULTS } from 'react-native-permissions';
+
+export const permissions = {
+  async requestCameraPermission(): Promise<boolean> {
+    try {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } else {
+        const result = await request(PERMISSIONS.IOS.CAMERA);
+        return result === RESULTS.GRANTED;
+      }
+    } catch (error) {
+      console.error('Camera permission error:', error);
+      return false;
+    }
+  },
+
+  async requestLocationPermission(): Promise<boolean> {
+    try {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } else {
+        const result = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+        return result === RESULTS.GRANTED;
+      }
+    } catch (error) {
+      console.error('Location permission error:', error);
+      return false;
+    }
+  },
+
+  async checkCameraPermission(): Promise<boolean> {
+    try {
+      if (Platform.OS === 'android') {
+        const result = await check(PERMISSIONS.ANDROID.CAMERA);
+        return result === RESULTS.GRANTED;
+      } else {
+        const result = await check(PERMISSIONS.IOS.CAMERA);
+        return result === RESULTS.GRANTED;
+      }
+    } catch (error) {
+      console.error('Camera permission check error:', error);
+      return false;
+    }
+  },
+};

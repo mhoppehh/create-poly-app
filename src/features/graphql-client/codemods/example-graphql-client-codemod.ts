@@ -103,3 +103,20 @@ export async function addRelayDependencies(filePath: string): Promise<void> {
 export async function addGraphQLRequestDependencies(filePath: string): Promise<void> {
   return addGraphQLClientDependencies(filePath, { clientType: 'graphql-request' })
 }
+
+// Mobile-specific codemods
+export async function addApolloClientDependenciesMobile(filePath: string): Promise<void> {
+  return addGraphQLClientDependencies(filePath, { clientType: 'apollo-client' })
+}
+
+export async function addUrqlDependenciesMobile(filePath: string): Promise<void> {
+  return addGraphQLClientDependencies(filePath, { clientType: 'urql' })
+}
+
+export async function addRelayDependenciesMobile(filePath: string): Promise<void> {
+  return addGraphQLClientDependencies(filePath, { clientType: 'relay' })
+}
+
+export async function addGraphQLRequestDependenciesMobile(filePath: string): Promise<void> {
+  return addGraphQLClientDependencies(filePath, { clientType: 'graphql-request' })
+}

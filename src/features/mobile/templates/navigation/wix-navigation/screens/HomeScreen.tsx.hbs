@@ -1,0 +1,57 @@
+import React from 'react';
+import { View, Text, StyleSheet, Button } from 'react-native';
+import { Navigation } from 'react-native-navigation';
+
+interface HomeScreenProps {
+  componentId: string;
+}
+
+const HomeScreen: React.FC<HomeScreenProps> = ({ componentId }) => {
+  const goToProfile = () => {
+    Navigation.push(componentId, {
+      component: {
+        name: 'Profile',
+        options: {
+          topBar: {
+            title: {
+              text: 'Profile'
+            }
+          }
+        }
+      }
+    });
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Home Screen</Text>
+      <Text style={styles.subtitle}>Welcome to your mobile app!</Text>
+      <Button
+        title="Go to Profile"
+        onPress={goToProfile}
+      />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+});
+
+export default HomeScreen;

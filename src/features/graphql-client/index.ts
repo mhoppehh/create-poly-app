@@ -3,6 +3,10 @@ import {
   addUrqlDependencies,
   addRelayDependencies,
   addGraphQLRequestDependencies,
+  addApolloClientDependenciesMobile,
+  addUrqlDependenciesMobile,
+  addRelayDependenciesMobile,
+  addGraphQLRequestDependenciesMobile,
 } from './codemods/example-graphql-client-codemod'
 import type { Feature } from '../../types'
 import { ActivationConditions, ActivationRules } from '../../forms/feature-selector'
@@ -13,7 +17,10 @@ export const graphqlClient: Feature = {
   name: 'GraphQL Client',
   dependsOn: ['vite'],
   activatedBy: ActivationRules.and(
-    ActivationConditions.includesValue('projectWorkspaces', 'react-webapp'),
+    ActivationRules.or(
+      ActivationConditions.includesValue('projectWorkspaces', 'react-webapp'),
+      ActivationConditions.includesValue('projectWorkspaces', 'mobile-app'),
+    ),
     ActivationConditions.includesValue('projectWorkspaces', 'graphql-server'),
     ActivationConditions.custom('graphqlClient', value => value && value !== 'none'),
   ),
@@ -59,9 +66,9 @@ export const graphqlClient: Feature = {
       name: 'setup-apollo-client',
       activatedBy: ActivationConditions.equals('graphqlClient', 'apollo-client'),
       scripts: [
-        { src: 'pnpm install @apollo/client graphql', dir: 'web' },
+        { src: 'pnpm install -w @apollo/client graphql', dir: 'web' },
         {
-          src: 'pnpm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations @graphql-codegen/typescript-react-apollo',
+          src: 'pnpm install -D -w @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations @graphql-codegen/typescript-react-apollo',
           dir: 'web',
         },
       ],
@@ -147,6 +154,112 @@ export const graphqlClient: Feature = {
       ],
       mods: {
         'web/package.json': [addGraphQLRequestDependencies],
+      },
+    },
+    {
+      name: 'setup-apollo-client-mobile',
+      activatedBy: ActivationRules.and(
+        ActivationConditions.equals('graphqlClient', 'apollo-client'),
+        ActivationConditions.includesValue('projectWorkspaces', 'mobile-app'),
+      ),
+      scripts: [
+        { src: 'pnpm install -w @apollo/client graphql', dir: 'mobile' },
+        {
+          src: 'pnpm install -D -w @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations @graphql-codegen/typescript-react-apollo',
+          dir: 'mobile',
+        },
+      ],
+      templates: [
+        {
+          source: 'src/features/graphql-client/templates/apollo-client',
+          destination: 'mobile/src/graphql',
+          context: {
+            clientType: 'apollo-client',
+            graphqlEndpoint: '{{graphqlEndpoint}}',
+          },
+        },
+      ],
+      mods: {
+        'mobile/package.json': [addApolloClientDependenciesMobile],
+      },
+    },
+    {
+      name: 'setup-urql-mobile',
+      activatedBy: ActivationRules.and(
+        ActivationConditions.equals('graphqlClient', 'urql'),
+        ActivationConditions.includesValue('projectWorkspaces', 'mobile-app'),
+      ),
+      scripts: [
+        { src: 'pnpm install urql graphql', dir: 'mobile' },
+        {
+          src: 'pnpm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations @graphql-codegen/typescript-urql',
+          dir: 'mobile',
+        },
+      ],
+      templates: [
+        {
+          source: 'src/features/graphql-client/templates/urql',
+          destination: 'mobile/src/graphql',
+          context: {
+            clientType: 'urql',
+            graphqlEndpoint: '{{graphqlEndpoint}}',
+          },
+        },
+      ],
+      mods: {
+        'mobile/package.json': [addUrqlDependenciesMobile],
+      },
+    },
+    {
+      name: 'setup-relay-mobile',
+      activatedBy: ActivationRules.and(
+        ActivationConditions.equals('graphqlClient', 'relay'),
+        ActivationConditions.includesValue('projectWorkspaces', 'mobile-app'),
+      ),
+      scripts: [
+        { src: 'pnpm install react-relay relay-runtime', dir: 'mobile' },
+        { src: 'pnpm install -D relay-compiler @types/react-relay @types/relay-runtime', dir: 'mobile' },
+      ],
+      templates: [
+        {
+          source: 'src/features/graphql-client/templates/relay',
+          destination: 'mobile/src/graphql',
+          context: {
+            clientType: 'relay',
+            graphqlEndpoint: '{{graphqlEndpoint}}',
+            schemaPath: '{{schemaPath}}',
+          },
+        },
+      ],
+      mods: {
+        'mobile/package.json': [addRelayDependenciesMobile],
+      },
+    },
+    {
+      name: 'setup-graphql-request-mobile',
+      activatedBy: ActivationRules.and(
+        ActivationConditions.equals('graphqlClient', 'graphql-request'),
+        ActivationConditions.includesValue('projectWorkspaces', 'mobile-app'),
+      ),
+      scripts: [
+        { src: 'pnpm install graphql-request graphql @tanstack/react-query', dir: 'mobile' },
+        {
+          src: 'pnpm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-operations',
+          dir: 'mobile',
+        },
+      ],
+      templates: [
+        {
+          source: 'src/features/graphql-client/templates/graphql-request',
+          destination: 'mobile/src/graphql',
+          context: {
+            clientType: 'graphql-request',
+            graphqlEndpoint: '{{graphqlEndpoint}}',
+          },
+        },
+      ],
+      mods: {
+        'mobile/package.json': [addGraphQLRequestDependenciesMobile],
       },
     },
   ],

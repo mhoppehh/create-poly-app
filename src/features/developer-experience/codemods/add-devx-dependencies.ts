@@ -17,12 +17,12 @@ export const addDevxScripts: CodeMod = (filePath: string, config?: Record<string
     commitlint: 'commitlint --edit',
   }
 
-  // Merge scripts
   packageJson.scripts = {
     ...packageJson.scripts,
     ...scripts,
   }
 
-  // Write updated package.json
+  packageJson.type = 'module'
+
   writeFileSync(filePath, JSON.stringify(packageJson, null, 2))
 }
