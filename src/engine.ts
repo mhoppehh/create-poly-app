@@ -7,10 +7,29 @@ import { execSync } from 'child_process'
 import { glob } from 'glob'
 
 import { CodeMod, InstallScript, InstallTemplate } from './types'
-import { FEATURES } from './features'
+import { FEATURES } from './features/index'
 import { getLogger } from './logger'
+import { evaluateRule } from './forms/feature-selector'
 
-// In your engine.ts
+// Register Handlebars helpers
+handlebars.registerHelper('eq', function (a: any, b: any) {
+  return a === b
+})
+
+handlebars.registerHelper('ne', function (a: any, b: any) {
+  return a !== b
+})
+
+handlebars.registerHelper('if_eq', function (this: any, a: any, b: any, options: any) {
+  return a === b ? options.fn(this) : options.inverse(this)
+})
+
+handlebars.registerHelper('hasFeature', function (this: any, featureName: string, options: any) {
+  const context = options.data.root
+  const enabledFeatures = context.enabledFeatures || []
+  return enabledFeatures.includes(featureName) ? options.fn(this) : options.inverse(this)
+})
+
 function sortFeatures(featureIds: string[]): string[] {
   const sorted: string[] = []
   const visited = new Set<string>()
@@ -43,30 +62,43 @@ function sortFeatures(featureIds: string[]): string[] {
   return sorted
 }
 
-export async function scaffoldProject(projectName: string, projectDir: string, featureIds: string[]) {
+export async function scaffoldProject(
+  projectName: string,
+  projectDir: string,
+  featureIds: string[],
+  featureConfigurations: Record<string, Record<string, any>> = {},
+  allAnswers: Record<string, any> = {},
+) {
   const logger = getLogger()
   logger.projectStart('engine', projectName)
 
-  // 1. SORT FEATURES
   const sortedIds = sortFeatures(featureIds)
   const features = sortedIds.map(id => FEATURES[id])
 
-  async function runScripts(scripts: InstallScript[] | undefined, args: any, featureName: string) {
+  async function runScripts(
+    scripts: InstallScript[] | undefined,
+    args: any,
+    featureName: string,
+    featureConfig: Record<string, any> = {},
+  ) {
     if (!scripts) return
 
     for (const scriptFn of scripts) {
       let src: string
       if (typeof scriptFn.src === 'string') {
         src = scriptFn.src
+        for (const [key, value] of Object.entries(featureConfig)) {
+          src = src.replace(new RegExp(`{{${key}}}`, 'g'), String(value))
+        }
       } else {
-        src = scriptFn.src(args)
+        src = scriptFn.src(args, featureConfig)
       }
 
       let cd = `cd ${projectDir}`
       let targetDir = projectDir
       if (scriptFn.dir) {
         targetDir = path.join(projectDir, scriptFn.dir)
-        // Create the target directory if it doesn't exist
+
         if (!fs.existsSync(targetDir)) {
           fs.mkdirSync(targetDir, { recursive: true })
           logger.directoryCreated(featureName, targetDir)
@@ -76,20 +108,17 @@ export async function scaffoldProject(projectName: string, projectDir: string, f
 
       logger.scriptStart(featureName, src)
       try {
-        // Execute the script with suppressed output, only log to file
         const result = execSync([cd, src].join(' && '), {
           stdio: ['inherit', 'pipe', 'pipe'],
           encoding: 'utf8',
         })
 
-        // Log the command output to file only
         if (result) {
           logger.infoFileOnly(featureName, 'Script output: %s', result)
         }
 
         logger.scriptComplete(featureName, src)
       } catch (err: any) {
-        // Log error output to file
         if (err.stdout) {
           logger.infoFileOnly(featureName, 'Script stdout: %s', err.stdout)
         }
@@ -103,18 +132,27 @@ export async function scaffoldProject(projectName: string, projectDir: string, f
     }
   }
 
-  async function copyTemplates(templates: InstallTemplate[] | undefined, args: any, featureName: string) {
+  async function copyTemplates(
+    templates: InstallTemplate[] | undefined,
+    args: any,
+    featureName: string,
+    featureConfig: Record<string, any> = {},
+  ) {
     if (!templates) return
 
     for (const template of templates) {
-      await processTemplate(template, args, featureName)
+      await processTemplate(template, args, featureName, featureConfig)
     }
   }
 
-  async function processTemplate(template: InstallTemplate, args: any, featureName: string) {
+  async function processTemplate(
+    template: InstallTemplate,
+    args: any,
+    featureName: string,
+    featureConfig: Record<string, any> = {},
+  ) {
     const { source, destination, context = {} } = template
 
-    // Resolve template source path
     let sourcePath = source
     if (!path.isAbsolute(sourcePath)) {
       const candidate = path.join(__dirname, sourcePath)
@@ -128,11 +166,9 @@ export async function scaffoldProject(projectName: string, projectDir: string, f
       }
     }
 
-    // Handle different source types
     const sourceStats = fs.existsSync(sourcePath) ? fs.statSync(sourcePath) : null
 
     if (!sourceStats) {
-      // Try as glob pattern
       const matches = await glob(sourcePath, { nodir: true })
       if (matches.length === 0) {
         logger.warn(featureName, 'No templates found matching pattern: %s', source)
@@ -140,19 +176,17 @@ export async function scaffoldProject(projectName: string, projectDir: string, f
       }
 
       for (const match of matches) {
-        await processTemplateFile(match, template, args, featureName, sourcePath)
+        await processTemplateFile(match, template, args, featureName, sourcePath, featureConfig)
       }
     } else if (sourceStats.isDirectory()) {
-      // Process entire directory
       const pattern = path.join(sourcePath, '**', '*.hbs')
       const matches = await glob(pattern, { nodir: true })
 
       for (const match of matches) {
-        await processTemplateFile(match, template, args, featureName, sourcePath)
+        await processTemplateFile(match, template, args, featureName, sourcePath, featureConfig)
       }
     } else {
-      // Single file
-      await processTemplateFile(sourcePath, template, args, featureName)
+      await processTemplateFile(sourcePath, template, args, featureName, undefined, featureConfig)
     }
   }
 
@@ -162,91 +196,106 @@ export async function scaffoldProject(projectName: string, projectDir: string, f
     args: any,
     featureName: string,
     basePath?: string,
+    featureConfig: Record<string, any> = {},
   ) {
     const { destination, context = {} } = template
 
-    // Calculate destination path
     let destPath: string
     if (basePath && fs.statSync(basePath).isDirectory()) {
-      // Preserve directory structure relative to base
       let relativePath = path.relative(basePath, filePath)
-      // Remove .hbs extension
+
       if (relativePath.endsWith('.hbs')) {
         relativePath = relativePath.slice(0, -4)
       }
       destPath = path.join(projectDir, destination, relativePath)
     } else {
-      // Direct destination for single files
       let fileName = path.basename(filePath)
       if (fileName.endsWith('.hbs')) {
         fileName = fileName.slice(0, -4)
       }
       destPath = path.join(projectDir, destination)
 
-      // If destination doesn't include a file extension, treat it as directory
       if (!path.extname(destination)) {
         destPath = path.join(destPath, fileName)
       }
     }
 
-    // Render template with Handlebars
     const templateSrc = await fsp.readFile(filePath, 'utf8')
     const handlebarsTemplate = handlebars.compile(templateSrc)
-    const mergedContext = Object.assign({}, context, args)
+    const mergedContext = Object.assign({}, context, args, featureConfig)
     const rendered = handlebarsTemplate(mergedContext)
 
-    // Ensure destination directory exists
     const destDir = path.dirname(destPath)
     if (!fs.existsSync(destDir)) {
       fs.mkdirSync(destDir, { recursive: true })
       logger.directoryCreated(featureName, destDir)
     }
 
-    // Write rendered template
     await fsp.writeFile(destPath, rendered, 'utf8')
     logger.templateWritten(featureName, filePath, destPath)
   }
 
-  // Helper to run code mods
-  async function runMods(mods: Record<string, CodeMod[]> | undefined, featureName: string) {
+  async function runMods(
+    mods: Record<string, CodeMod[]> | undefined,
+    featureName: string,
+    featureConfig: Record<string, any> = {},
+  ) {
     if (!mods) return
-    const project = new Project()
 
     for (const [relativePath, modFns] of Object.entries(mods)) {
       const filePath = path.join(projectDir, relativePath)
       if (!fs.existsSync(filePath)) continue
-      const sourceFile = project.addSourceFileAtPath(filePath)
+
       for (const mod of modFns) {
-        mod(sourceFile)
+        await mod(filePath, featureConfig)
         logger.codeModApplied(featureName, filePath)
       }
     }
-    await project.save()
   }
 
-  // Helper to process a single stage
-  async function processStage(stageName: string, featureName: string, scripts?: any[], templates?: any, mods?: any) {
-    const args = { projectName, projectDir }
+  async function processStage(
+    stageName: string,
+    featureName: string,
+    featureConfig: Record<string, any>,
+    scripts?: any[],
+    templates?: any,
+    mods?: any,
+  ) {
+    const args = {
+      projectName,
+      projectDir,
+      enabledFeatures: sortedIds,
+      allAnswers,
+    }
 
     logger.stageProcessing(featureName, stageName)
-    await runScripts(scripts, args, featureName)
-    await copyTemplates(templates, args, featureName)
-    await runMods(mods, featureName)
+    await runScripts(scripts, args, featureName, featureConfig)
+    await copyTemplates(templates, args, featureName, featureConfig)
+    await runMods(mods, featureName, featureConfig)
   }
 
-  // Run install steps for each feature in sorted order
   for (const feature of features) {
     if (!feature) {
       logger.warn('engine', 'Feature not found')
       continue
     }
 
+    const featureConfig = featureConfigurations[feature.id] || {}
     logger.featureProcessing(feature.name, feature.name)
 
-    // Process all stages
     if (feature.stages && feature.stages.length > 0) {
       for (const stage of feature.stages) {
-        await processStage(stage.name, feature.name, stage.scripts, stage.templates, stage.mods)
+        if (stage.activatedBy) {
+          const shouldActivate = evaluateRule(stage.activatedBy, allAnswers, feature.id)
+          if (!shouldActivate) {
+            logger.infoFileOnly(feature.name, 'Skipping stage "%s" - activation condition not met', stage.name)
+            logger.infoFileOnly(feature.name, 'Stage activation debug - allAnswers: %o', allAnswers)
+            logger.infoFileOnly(feature.name, 'Stage activation debug - condition: %o', stage.activatedBy)
+            continue
+          }
+        }
+
+        await processStage(stage.name, feature.name, featureConfig, stage.scripts, stage.templates, stage.mods)
       }
     } else {
       logger.warn(feature.name, 'No stages defined for feature: %s', feature.name)

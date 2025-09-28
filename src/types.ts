@@ -1,21 +1,19 @@
-import { SourceFile } from 'ts-morph'
+import type { Question } from './forms/types'
 
-// A CodeMod is a function that modifies a source file.
-export type CodeMod = (sourceFile: SourceFile) => void
+export type CodeMod = (filePath: string, config?: Record<string, any>) => void | Promise<void>
 
 export interface InstallTemplate {
-  // Source can be a single file, glob pattern, or directory
   source: string
-  // Destination path
+
   destination: string
-  // Context for template rendering
+
   context?: any
 }
 
 export type InstallTemplates = InstallTemplate[]
 
 export interface InstallScript {
-  src: ((args: any) => string) | string
+  src: ((args: any, config?: Record<string, any>) => string) | string
   dir?: string
 }
 
@@ -24,6 +22,23 @@ export interface FeatureStage {
   scripts?: InstallScript[]
   templates?: InstallTemplates
   mods?: Record<string, CodeMod[]>
+
+  activatedBy?: FeatureActivationRule | FeatureActivationCondition
+}
+
+export interface FeatureActivationCondition {
+  questionId: string
+  condition:
+    | { type: 'equals'; value: any }
+    | { type: 'includes'; value: any }
+    | { type: 'contains'; value: any }
+    | { type: 'in'; values: any[] }
+    | { type: 'custom'; evaluator: (value: any, allAnswers: Record<string, any>) => boolean }
+}
+
+export interface FeatureActivationRule {
+  type: 'and' | 'or'
+  conditions: (FeatureActivationCondition | FeatureActivationRule)[]
 }
 
 export interface Feature {
@@ -31,17 +46,17 @@ export interface Feature {
   name: string
   description: string
 
-  // For dependency resolution
   dependsOn?: string[]
 
-  // package.json modifications
+  activatedBy?: FeatureActivationRule | FeatureActivationCondition
+
+  configuration?: Question[]
+
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
   scripts?: Record<string, string>
 
-  // Merging for JSON config files
   configMerges?: Record<string, object>
 
-  // Flexible stages system
   stages?: FeatureStage[]
 }

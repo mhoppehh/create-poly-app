@@ -1,0 +1,55 @@
+import { modPackageJsonApolloServer } from './codemods/mod-package-json-api'
+import { addApiToPnpmWorkspace } from './codemods/add-api-to-pnpm-workspace'
+import type { Feature } from '../../types'
+import { ActivationConditions } from '../../forms/feature-selector'
+
+export const apolloServer: Feature = {
+  id: 'apollo-server',
+  description: 'A GraphQL Server for React',
+  name: 'Apollo Server',
+  dependsOn: ['projectDir'],
+  activatedBy: ActivationConditions.includesValue('projectWorkspaces', 'graphql-server'),
+  stages: [
+    {
+      name: 'setup-api-structure',
+      scripts: [
+        { src: 'pnpm init && pnpm pkg set type="module"', dir: 'api' },
+        {
+          src: 'pnpm install -D  typescript @types/node tsx',
+          dir: 'api',
+        },
+      ],
+      mods: {
+        'api/package.json': [modPackageJsonApolloServer],
+        'pnpm-workspace.yaml': [addApiToPnpmWorkspace],
+      },
+      templates: [
+        {
+          source: 'src/features/apollo-server/templates',
+          destination: 'api',
+        },
+      ],
+    },
+    {
+      name: 'install-dependencies',
+      scripts: [{ src: 'pnpm install --filter=api @apollo/server graphql', dir: 'api' }],
+    },
+    {
+      name: 'create-modules',
+      scripts: [
+        {
+          src: 'pnpm add --filter=api -D @graphql-codegen/cli @graphql-codegen/graphql-modules-preset @graphql-codegen/typescript-resolvers @graphql-codegen/typescript',
+          dir: 'api',
+        },
+        {
+          src: 'pnpm install --filter=api @graphql-tools/load-files @graphql-tools/merge @graphql-tools/utils graphql-scalars graphql-modules',
+          dir: 'api',
+        },
+        {
+          src: 'pnpm codegen',
+          dir: 'api',
+        },
+      ],
+    },
+  ],
+}

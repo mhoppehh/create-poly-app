@@ -1,13 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * Simple Form System Demo
- *
- * This script demonstrates the basic capabilities of our form system
- * with a simple, working example that you can run immediately.
- */
-
-// Import the form system (adjust paths if needed)
 import { runForm, FormBuilder, QuestionHelpers, ValidationHelpers, ConditionalHelpers } from '../forms'
 
 async function runSimpleDemo() {
@@ -24,7 +16,6 @@ This demo shows the basic capabilities of our form system:
 Let's start with a simple survey...
 `)
 
-  // Create a simple form using the builder
   const demoForm = new FormBuilder('demo', '📋 Quick Survey')
     .description('A simple demo of our form system capabilities')
     .settings({ showProgress: true, allowBack: true })
@@ -100,7 +91,7 @@ ${JSON.stringify(answers, null, 2)}
 
 🎉 This demonstrates:
 • Text input with validation
-• Select dropdowns  
+• Select dropdowns
 • Conditional questions (only showed "specify role" if you picked "other")
 • Framework selection (only if you like JavaScript)
 • Multi-select options
@@ -111,7 +102,7 @@ ${JSON.stringify(answers, null, 2)}
 The same system powers create-poly-app and can be used for any form needs!
 `)
   } catch (error) {
-    console.log('\n❌ Demo cancelled or failed:', error.message)
+    console.log('\n❌ Demo cancelled or failed:', error)
   }
 }
 
@@ -125,7 +116,6 @@ This shows the recursive power of our form system.
 `)
 
   try {
-    // Simple form to create a basic survey
     const metaForm = new FormBuilder('meta', '🎯 Form Creator')
       .description('Create a simple survey form')
 
@@ -155,9 +145,8 @@ This shows the recursive power of our form system.
 
     console.log(`\n🔧 Creating "${setup.surveyTitle}" with ${setup.questionCount} questions...`)
 
-    // Generate form code
     const formCode = `
-// Generated Survey: ${setup.surveyTitle}
+
 const generatedSurvey = {
   id: 'generated-survey',
   title: '${setup.surveyTitle}',
@@ -177,7 +166,6 @@ ${Array.from(
   }]
 }
 
-// Usage: const answers = await runForm(generatedSurvey)
 `
 
     console.log(`
@@ -191,7 +179,7 @@ ${'='.repeat(60)}
    that generates working TypeScript code.
 `)
   } catch (error) {
-    console.log('\n❌ Meta-form demo cancelled:', error.message)
+    console.log('\n❌ Meta-form demo cancelled:', error)
   }
 }
 

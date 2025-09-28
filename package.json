@@ -36,7 +36,8 @@
     "release:minor": "npm version minor && npm publish",
     "release:major": "npm version major && npm publish",
     "demo:forms": "tsx src/scripts/demo-forms.ts",
-    "demo:forms:meta": "tsx src/scripts/form-builder-demo.ts"
+    "demo:forms:meta": "tsx src/scripts/form-builder-demo.ts",
+    "scaffold:feature": "tsx src/scripts/scaffold-feature.ts"
   },
   "keywords": [
     "cli",

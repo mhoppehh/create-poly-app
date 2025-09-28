@@ -1,9 +1,5 @@
 import { FormBuilder, QuestionHelpers, ValidationHelpers, ConditionalHelpers, OptionHelpers } from './helpers'
 
-/**
- * Meta-form: A form that helps you create forms!
- * This demonstrates the power and flexibility of our form system.
- */
 export const formBuilderForm = new FormBuilder('form-builder', '🎯 Form Builder')
   .description('Create your own custom form using our powerful form system')
   .settings({
@@ -13,7 +9,6 @@ export const formBuilderForm = new FormBuilder('form-builder', '🎯 Form Builde
     cancelLabel: 'Cancel',
   })
 
-  // Basic form information
   .group('form-basics', 'Form Information', 'Tell us about the form you want to create')
   .question(
     QuestionHelpers.text('formId', 'Form ID', {
@@ -44,7 +39,6 @@ export const formBuilderForm = new FormBuilder('form-builder', '🎯 Form Builde
     }),
   )
 
-  // Form settings
   .group('form-settings', 'Form Settings', 'Configure how your form behaves')
   .question(
     QuestionHelpers.toggle('allowBack', 'Allow users to go back to previous questions?', {
@@ -65,7 +59,6 @@ export const formBuilderForm = new FormBuilder('form-builder', '🎯 Form Builde
     }),
   )
 
-  // Number of groups
   .group('form-structure', 'Form Structure', 'Organize your questions into groups')
   .question(
     QuestionHelpers.number('numberOfGroups', 'How many question groups do you want?', {
@@ -80,12 +73,8 @@ export const formBuilderForm = new FormBuilder('form-builder', '🎯 Form Builde
     }),
   )
 
-  // Dynamic group creation (we'll handle this programmatically)
   .build()
 
-/**
- * Generate additional questions for each group and question
- */
 export function generateDynamicFormQuestions(numberOfGroups: number): FormBuilder {
   const builder = new FormBuilder('form-builder-dynamic', '🎯 Form Builder - Configure Questions')
     .description("Now let's set up your question groups and individual questions")
@@ -96,7 +85,6 @@ export function generateDynamicFormQuestions(numberOfGroups: number): FormBuilde
       cancelLabel: 'Back',
     })
 
-  // For each group, ask for group details
   for (let groupIndex = 0; groupIndex < numberOfGroups; groupIndex++) {
     const groupNum = groupIndex + 1
 
@@ -140,11 +128,9 @@ export function generateDynamicFormQuestions(numberOfGroups: number): FormBuilde
       )
   }
 
-  // For each group's questions, ask for question details
   for (let groupIndex = 0; groupIndex < numberOfGroups; groupIndex++) {
     const groupNum = groupIndex + 1
 
-    // Create one group for all questions in this form group
     builder.group(
       `group-${groupIndex}-questions`,
       `Group ${groupNum} - Questions`,
@@ -152,10 +138,9 @@ export function generateDynamicFormQuestions(numberOfGroups: number): FormBuilde
     )
 
     for (let questionIndex = 0; questionIndex < 5; questionIndex++) {
-      // Max 5 questions per group for simplicity
+
       const questionNum = questionIndex + 1
 
-      // Apply conditional logic to each individual question, not the group
       const questionCondition = [ConditionalHelpers.greaterThan(`group${groupIndex}QuestionCount`, questionIndex)]
 
       builder
@@ -256,16 +241,11 @@ export function generateDynamicFormQuestions(numberOfGroups: number): FormBuilde
   return builder
 }
 
-/**
- * Process form builder answers and generate the actual form definition
- */
 export function generateFormFromAnswers(basicAnswers: any, detailAnswers: any): string {
   const { formId, formTitle, formDescription, allowBack, showProgress, submitLabel, numberOfGroups } = basicAnswers
 
-  // Start building the form code
   let formCode = `import { Form } from './types'
 
-// Generated form: ${formTitle}
 export const ${formId}Form: Form = {
   id: '${formId}',
   title: '${formTitle}',`
@@ -284,7 +264,6 @@ export const ${formId}Form: Form = {
   },
   groups: [`
 
-  // Generate groups
   for (let groupIndex = 0; groupIndex < numberOfGroups; groupIndex++) {
     const groupId = detailAnswers[`group${groupIndex}Id`]
     const groupTitle = detailAnswers[`group${groupIndex}Title`]
@@ -304,7 +283,6 @@ export const ${formId}Form: Form = {
     formCode += `
       questions: [`
 
-    // Generate questions for this group
     for (let questionIndex = 0; questionIndex < questionCount; questionIndex++) {
       const qId = detailAnswers[`g${groupIndex}q${questionIndex}Id`]
       const qTitle = detailAnswers[`g${groupIndex}q${questionIndex}Title`]
@@ -335,7 +313,6 @@ export const ${formId}Form: Form = {
           placeholder: '${qPlaceholder}',`
       }
 
-      // Add options for select/multiselect
       if (qOptions && ['select', 'multiselect'].includes(qType)) {
         const options = qOptions
           .split(',')
@@ -352,7 +329,6 @@ export const ${formId}Form: Form = {
           ],`
       }
 
-      // Add basic validation
       if (qRequired || qType === 'email') {
         formCode += `
           validation: [`
@@ -389,18 +365,11 @@ export const ${formId}Form: Form = {
   ]
 }
 
-// Usage example:
-// import { runForm } from './renderer'
-// const answers = await runForm(${formId}Form)
-// console.log('Form answers:', answers)
 `
 
   return formCode
 }
 
-/**
- * Helper to create a simple usage example
- */
 export function generateUsageExample(formId: string): string {
   return `#!/usr/bin/env node
 import { runForm } from './forms'
@@ -408,7 +377,7 @@ import { ${formId}Form } from './generated-form'
 
 async function main() {
   console.log('\\n🎯 Running your generated form...\\n')
-  
+
   try {
     const answers = await runForm(${formId}Form, {
       validateOnChange: true,
@@ -419,7 +388,7 @@ async function main() {
     console.log('\\n✅ Form completed successfully!')
     console.log('📊 Collected answers:')
     console.log(JSON.stringify(answers, null, 2))
-    
+
   } catch (error) {
     console.error('❌ Form was cancelled or failed:', error)
   }

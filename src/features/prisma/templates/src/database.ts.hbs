@@ -1,0 +1,45 @@
+import { PrismaClient } from "../generated/prisma"
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+}
+
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    {{#if (eq databaseProvider "postgresql")}}
+    log: ['query', 'info', 'warn', 'error'],
+    {{else if (eq databaseProvider "mysql")}}
+    log: ['query', 'warn', 'error'],
+    {{else if (eq databaseProvider "mongodb")}}
+    log: ['query'],
+    {{else}}
+    log: ['query'],
+    {{/if}}
+  })
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+
+{{#if (eq databaseProvider "postgresql")}}
+// PostgreSQL-specific connection pool configuration
+export const connectWithRetry = async () => {
+  try {
+    await prisma.$connect()
+    console.log('Connected to PostgreSQL database')
+  } catch (error) {
+    console.error('Failed to connect to PostgreSQL:', error)
+    setTimeout(connectWithRetry, 5000)
+  }
+}
+{{else if (eq databaseProvider "mongodb")}}
+// MongoDB-specific configuration
+export const connectWithRetry = async () => {
+  try {
+    await prisma.$connect()
+    console.log('Connected to MongoDB database')
+  } catch (error) {
+    console.error('Failed to connect to MongoDB:', error)
+    setTimeout(connectWithRetry, 5000)
+  }
+}
+{{/if}}

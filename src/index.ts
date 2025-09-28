@@ -6,6 +6,11 @@ import { createLogger, LogLevel } from './logger'
 import { LoggingConfig, DEFAULT_LOGGING_CONFIG } from './config'
 import { runForm } from './forms'
 import { createPolyAppForm } from './forms/definitions'
+import {
+  selectFeaturesFromAnswers,
+  getFeatureConfigurationQuestions,
+  extractFeatureConfigurations,
+} from './forms/feature-selector'
 
 interface ParsedArgs {
   loggingConfig: LoggingConfig
@@ -138,7 +143,6 @@ async function main() {
   logger.infoFileOnly('main', 'Starting create-poly-app')
 
   try {
-    // Use the new form system
     const answers = await runForm(createPolyAppForm, {
       validateOnChange: true,
       autoSave: true,
@@ -147,52 +151,64 @@ async function main() {
 
     logger.infoFileOnly('main', 'User choices: %o', answers)
 
-    // Extract project details
     const projectName = answers.projectName
     const projectPath = path.resolve(process.cwd(), projectName)
     logger.infoFileOnly('main', 'Project will be created at: %s', projectPath)
 
-    // Build feature list based on user selections
-    const features = ['projectDir']
+    const features = selectFeaturesFromAnswers(answers)
+    logger.infoFileOnly('main', 'Selected features: %o', features)
 
-    if (answers.includeFrontend) {
-      features.push('vite')
-      if (answers.includeTailwind) {
-        features.push('tailwind')
+    const configQuestions = getFeatureConfigurationQuestions(features)
+    let allAnswers = { ...answers }
+
+    if (configQuestions.length > 0) {
+      console.log('\n⚙️  Configuring features...')
+
+      const configForm = {
+        id: 'feature-config',
+        title: '⚙️  Feature Configuration',
+        description: 'Configure the selected features for your project',
+        groups: configQuestions,
       }
+
+      const configAnswers = await runForm(configForm, {
+        validateOnChange: true,
+        autoSave: true,
+        saveKey: 'create-poly-app-config-state',
+      })
+
+      allAnswers = { ...answers, ...configAnswers }
+      logger.infoFileOnly('main', 'Feature configurations: %o', configAnswers)
     }
 
-    if (answers.includeGraphQLServer) {
-      features.push('apollo-server')
-    }
+    const featureConfigurations = extractFeatureConfigurations(allAnswers, features)
+    logger.infoFileOnly('main', 'Extracted feature configurations: %o', featureConfigurations)
 
     console.log('\n🎯 Creating project with features:', features.join(', '))
 
-    await scaffoldProject(projectName, projectPath, features)
+    await scaffoldProject(projectName, projectPath, features, featureConfigurations, allAnswers)
 
     console.log(`\n✅ Project "${projectName}" created successfully!`)
     console.log(`📁 Location: ${projectPath}`)
     console.log('\n🚀 Next steps:')
     console.log(`   cd ${projectName}`)
+    console.log('   pnpm install')
 
-    if (answers.packageManager === 'pnpm') {
-      console.log('   pnpm install')
-      if (answers.includeFrontend) {
-        console.log('   pnpm dev  # Start the frontend')
-      }
-      if (answers.includeGraphQLServer) {
-        console.log('   pnpm --filter=api dev  # Start the API server')
-      }
-    } else if (answers.packageManager === 'yarn') {
-      console.log('   yarn install')
-      if (answers.includeFrontend) {
-        console.log('   yarn dev  # Start the frontend')
-      }
-    } else {
-      console.log('   npm install')
-      if (answers.includeFrontend) {
-        console.log('   npm run dev  # Start the frontend')
-      }
+    if (features.includes('vite')) {
+      console.log('   pnpm dev  # Start the frontend')
+    }
+
+    if (features.includes('apollo-server')) {
+      console.log('   pnpm --filter=api dev  # Start the API server')
+    }
+
+    if (features.includes('prisma')) {
+      console.log('\n📊 Database Setup (Prisma):')
+      console.log('   1. Update your DATABASE_URL in api/.env')
+      console.log('   2. Run database migrations:')
+      console.log('      pnpm --filter=api prisma:push    # Push schema to database')
+      console.log('      pnpm --filter=api prisma:seed    # Seed with sample data')
+      console.log('      pnpm --filter=api prisma:studio  # Open Prisma Studio')
     }
   } catch (error) {
     logger.error('main', 'Project creation failed: %s', error)

@@ -269,7 +269,7 @@ async function main() {
   if (answers.includeTailwind) features.push('tailwind')
   if (answers.includeGraphQLServer) features.push('apollo-server')
 
-  await scaffoldProject(answers.projectName, projectPath, features)
+  await scaffoldProject(answers.projectName, projectPath, features, {}, answers)
 }
 ```
 
