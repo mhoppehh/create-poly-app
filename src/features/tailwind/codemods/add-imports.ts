@@ -3,7 +3,6 @@ import fs from 'fs'
 import prettier from 'prettier'
 
 export function addTailwindImport(filePath: string) {
-
   const cssContent = fs.readFileSync(filePath, 'utf8')
 
   const ast = csstree.parse(cssContent)
