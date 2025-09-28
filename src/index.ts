@@ -305,3 +305,5 @@ main().catch(error => {
   logger.error('main', 'Unhandled error: %s', error)
   process.exit(1)
 })
+
+// Test comment to verify Husky hooks are working
