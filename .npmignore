@@ -1,0 +1,59 @@
+# Source files
+src/
+*.ts
+*.tsx
+tsconfig.json
+tsconfig.*.json
+
+# Build tools
+rollup.config.js
+.prettierrc
+.prettierignore
+prettier.config.mjs
+eslint.config.js
+
+# Development files
+.vscode/
+.github/prompts/
+my-awesome-project/
+create-poly-app.log
+*.log
+
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Git
+.git/
+.gitignore
+
+# Testing
+coverage/
+*.test.*
+*.spec.*
+test/
+tests/
+
+# Development scripts
+scripts/
+
+# Documentation (keep README.md)
+docs/
+.md
+!README.md
+
+# Environment
+.env
+.env.*
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
