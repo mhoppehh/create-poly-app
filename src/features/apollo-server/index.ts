@@ -11,14 +11,13 @@ export const apolloServer: Feature = {
   activatedBy: ActivationConditions.includesValue('projectWorkspaces', 'graphql-server'),
   stages: [
     {
+      name: 'create-api',
+      scripts: [{ src: 'pnpm init && pnpm pkg set type="module"', dir: 'api' }],
+    },
+    {
       name: 'setup-api-structure',
-      scripts: [
-        { src: 'pnpm init && pnpm pkg set type="module"', dir: 'api' },
-        {
-          src: 'pnpm install -D  typescript @types/node tsx',
-          dir: 'api',
-        },
-      ],
+      scripts: [{ src: 'pnpm pkg set type="module"', dir: 'api' }],
+      dependencies: [{ name: ['typescript', '@types/node', 'tsx'], workspace: 'api', type: 'devDependencies' }],
       mods: {
         'api/package.json': [modPackageJsonApolloServer],
         'pnpm-workspace.yaml': [addApiToPnpmWorkspace],
@@ -32,19 +31,34 @@ export const apolloServer: Feature = {
     },
     {
       name: 'install-dependencies',
-      scripts: [{ src: 'pnpm install --filter=api @apollo/server graphql', dir: 'api' }],
+      dependencies: [{ name: ['@apollo/server', 'graphql'], workspace: 'api', type: 'dependencies' }],
     },
     {
       name: 'create-modules',
+      dependencies: [
+        {
+          name: [
+            '@graphql-codegen/cli',
+            '@graphql-codegen/graphql-modules-preset',
+            '@graphql-codegen/typescript-resolvers',
+            '@graphql-codegen/typescript',
+          ],
+          workspace: 'api',
+          type: 'devDependencies',
+        },
+        {
+          name: [
+            '@graphql-tools/load-files',
+            '@graphql-tools/merge',
+            '@graphql-tools/utils',
+            'graphql-scalars',
+            'graphql-modules',
+          ],
+          workspace: 'api',
+          type: 'dependencies',
+        },
+      ],
       scripts: [
-        {
-          src: 'pnpm add --filter=api -D @graphql-codegen/cli @graphql-codegen/graphql-modules-preset @graphql-codegen/typescript-resolvers @graphql-codegen/typescript',
-          dir: 'api',
-        },
-        {
-          src: 'pnpm install --filter=api @graphql-tools/load-files @graphql-tools/merge @graphql-tools/utils graphql-scalars graphql-modules',
-          dir: 'api',
-        },
         {
           src: 'pnpm codegen',
           dir: 'api',
