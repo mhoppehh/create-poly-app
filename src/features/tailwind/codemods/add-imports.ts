@@ -3,10 +3,9 @@ import fs from 'fs'
 import prettier from 'prettier'
 
 export function addTailwindImport(filePath: string) {
-
   const cssContent = fs.readFileSync(filePath, 'utf8')
 
-  let ast = csstree.parse(cssContent)
+  const ast = csstree.parse(cssContent)
 
   const tailwindChildNode: CssNode = {
     type: 'String',

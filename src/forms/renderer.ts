@@ -1,5 +1,5 @@
 import prompts from 'prompts'
-import { Form, Question, QuestionType, SelectOption } from './types'
+import { Form, Question, QuestionType } from './types'
 import { FormEngine } from './engine'
 
 export class FormRenderer {
@@ -70,7 +70,7 @@ export class FormRenderer {
             },
           })
 
-          if (!answer.hasOwnProperty(question.id)) {
+          if (answer[question.id] === undefined) {
             shouldContinue = false
             break
           }
