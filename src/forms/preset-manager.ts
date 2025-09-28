@@ -1,5 +1,6 @@
 import { Preset, PresetMetadata, PresetManagerOptions } from './types'
 import { promises as fs } from 'fs'
+import fsSync from 'fs'
 import * as path from 'path'
 import { homedir } from 'os'
 
@@ -232,18 +233,15 @@ export class PresetManager {
    */
   getStorageInfo(): { count: number; estimatedSize: string; filePath: string } {
     try {
-      // For file-based storage, we'll read the file synchronously for this info method
-      const fs = require('fs')
-
-      if (!fs.existsSync(this.presetFilePath)) {
+      if (!fsSync.existsSync(this.presetFilePath)) {
         return { count: 0, estimatedSize: '0 KB', filePath: this.presetFilePath }
       }
 
-      const fileContent = fs.readFileSync(this.presetFilePath, 'utf-8')
+      const fileContent = fsSync.readFileSync(this.presetFilePath, 'utf-8')
       const data = JSON.parse(fileContent)
       const presets = Array.isArray(data.presets) ? data.presets : []
 
-      const stats = fs.statSync(this.presetFilePath)
+      const stats = fsSync.statSync(this.presetFilePath)
       const sizeInKB = Math.round((stats.size / 1024) * 100) / 100
 
       return {
@@ -251,7 +249,7 @@ export class PresetManager {
         estimatedSize: `${sizeInKB} KB`,
         filePath: this.presetFilePath,
       }
-    } catch (error) {
+    } catch {
       return { count: 0, estimatedSize: 'Unknown', filePath: this.presetFilePath }
     }
   }
@@ -267,8 +265,7 @@ export class PresetManager {
 
     try {
       await fs.access(this.presetFilePath)
-    } catch (error) {
-      // File doesn't exist, create an empty one
+    } catch {
       const initialData = {
         version: '1.0',
         createdAt: new Date().toISOString(),
