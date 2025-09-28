@@ -1,4 +1,4 @@
-# 🚀 Create Poly App
+# Create Poly App
 
 [![npm version](https://badge.fury.io/js/create-poly-app.svg)](https://badge.fury.io/js/create-poly-app)
 [![npm downloads](https://img.shields.io/npm/dm/create-poly-app.svg)](https://www.npmjs.com/package/create-poly-app)
@@ -6,20 +6,20 @@
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 
-A powerful CLI tool for scaffolding modern polyglot applications with a modular, feature-driven architecture. Create full-stack projects with React frontends, GraphQL APIs, databases, and more - all through an interactive, intelligent setup process.
+A CLI tool for scaffolding polyglot applications with a modular, feature-driven architecture. Creates full-stack projects with React frontends, GraphQL APIs, databases, and more through an interactive setup process.
 
-## ✨ Features
+## Features
 
-- **🎯 Interactive Setup**: Intelligent form-driven project configuration
-- **🏗️ Modular Architecture**: Feature-based system with dependency management
-- **⚡ Modern Stack**: React + Vite, Apollo Server, Prisma ORM, TypeScript
-- **📦 Monorepo Ready**: Built-in pnpm workspace support
-- **🔧 Code Generation**: Handlebars templates with smart code modifications
-- **🎨 Flexible Styling**: TailwindCSS integration
-- **📊 Database Support**: Multiple database providers (SQLite, PostgreSQL, MySQL, MongoDB)
-- **🔄 Auto-Save**: Persistent form state across sessions
+- **Interactive Setup**: Form-driven project configuration
+- **Modular Architecture**: Feature-based system with dependency management
+- **Stack**: React + Vite, Apollo Server, Prisma ORM, TypeScript
+- **Monorepo Ready**: Built-in pnpm workspace support
+- **Code Generation**: Handlebars templates with code modifications
+- **Flexible Styling**: TailwindCSS integration
+- **Database Support**: Multiple database providers (SQLite, PostgreSQL, MySQL, MongoDB)
+- **Auto-Save**: Persistent form state across sessions
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Installation](#installation)
 - [Quick Start](#quick-start)
@@ -33,7 +33,7 @@ A powerful CLI tool for scaffolding modern polyglot applications with a modular,
 - [Contributing](#contributing)
 - [License](#license)
 
-## 🚀 Installation
+## Installation
 
 ### Requirements
 
@@ -62,27 +62,27 @@ npx create-poly-app@latest
 create-poly-app --version
 ```
 
-## ⚡ Quick Start
+## Quick Start
 
-1. **Create a new project**:
+1. **Create a project**:
 
    ```bash
    create-poly-app
    ```
 
-2. **Follow the interactive prompts**:
-   - Choose your project name
+2. **Complete the configuration prompts**:
+   - Enter project name
    - Select workspaces (React webapp, GraphQL API, Mobile app)
    - Configure features (Database, Styling, etc.)
 
-3. **Navigate to your project**:
+3. **Navigate to project directory**:
 
    ```bash
-   cd my-awesome-project
+   cd my-project
    pnpm install
    ```
 
-4. **Start development**:
+4. **Start development servers**:
 
    ```bash
    # Start the frontend
@@ -96,34 +96,34 @@ create-poly-app --version
    pnpm --filter=api prisma:seed
    ```
 
-## 🎯 Features Overview
+## Features Overview
 
-### 🏗️ Workspace Types
+### Workspace Types
 
-- **React Webapp** - Modern React + TypeScript + Vite frontend
+- **React Webapp** - React + TypeScript + Vite frontend
 - **GraphQL API Server** - Apollo Server with TypeScript and modular architecture
 - **Mobile App** - React Native application (coming soon)
 
-### 🔧 Available Features
+### Available Features
 
 | Feature           | Description                                           | Dependencies      |
 | ----------------- | ----------------------------------------------------- | ----------------- |
-| **Vite**          | Modern frontend build tool with React + TypeScript    | Project Directory |
+| **Vite**          | Frontend build tool with React + TypeScript           | Project Directory |
 | **Apollo Server** | GraphQL API with TypeScript and code generation       | Project Directory |
 | **Prisma ORM**    | Type-safe database operations with multiple providers | Apollo Server     |
 | **TailwindCSS**   | Utility-first CSS framework                           | Vite              |
 
-### 📊 Database Providers
+### Database Providers
 
-- **SQLite** - Perfect for local development and prototyping
-- **PostgreSQL** - Production-ready with advanced features
-- **MySQL** - Popular open-source relational database
+- **SQLite** - Local development and prototyping
+- **PostgreSQL** - Production-ready with additional features
+- **MySQL** - Open-source relational database
 - **MongoDB** - NoSQL document database for flexible schemas
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-my-awesome-project/
+my-project/
 ├── pnpm-workspace.yaml          # Monorepo configuration
 ├── api/                         # GraphQL API Server
 │   ├── src/
@@ -144,20 +144,20 @@ my-awesome-project/
     └── package.json
 ```
 
-## 🎮 Configuration
+## Configuration
 
 ### Form System
 
-The CLI uses an advanced form system with:
+The CLI uses a form system with:
 
 - **Dynamic Questions**: Questions appear based on previous answers
 - **Validation**: Real-time validation with custom rules
 - **Auto-save**: Form state persists across sessions
-- **Conditional Logic**: Smart form flow based on selections
+- **Conditional Logic**: Form flow based on selections
 
 ### Feature Activation
 
-Features are activated based on intelligent conditions:
+Features are activated based on conditions:
 
 ```typescript
 // Example: Prisma activates when both GraphQL server and database are selected
@@ -169,13 +169,13 @@ activatedBy: ActivationRules.and(
 
 ### Code Modifications
 
-The tool uses a sophisticated code modification system:
+The tool uses a code modification system:
 
-- **TypeScript AST Manipulation**: Uses ts-morph for safe code changes
+- **TypeScript AST Manipulation**: Uses ts-morph for code changes
 - **Template System**: Handlebars templates with custom helpers
 - **Dependency Resolution**: Automatic feature dependency sorting
 
-## 🛠️ Development
+## Development
 
 ### Prerequisites
 
@@ -241,7 +241,7 @@ pnpm demo:forms
 
 3. **Add to feature registry** in `src/features/index.ts`
 
-## 🔧 API Reference
+## API Reference
 
 ### Core Types
 
@@ -288,14 +288,14 @@ interface Question {
 }
 ```
 
-## 🧪 Example Workflows
+## Example Workflows
 
 ### Full-Stack App with Database
 
 1. **Select workspaces**: React Webapp + GraphQL Server
 2. **Choose API features**: Database integration
 3. **Configure database**: PostgreSQL
-4. **Result**: Complete monorepo with:
+4. **Output**: Monorepo with:
    - React frontend with Vite
    - Apollo GraphQL server
    - Prisma ORM with PostgreSQL
@@ -306,42 +306,51 @@ interface Question {
 
 1. **Select workspaces**: React Webapp only
 2. **Configure styling**: TailwindCSS
-3. **Result**: Optimized React app with:
+3. **Output**: React application with:
    - Vite build system
    - TypeScript configuration
    - TailwindCSS integration
    - Development server
 
-## 📋 Logging Configuration
+## Logging Configuration
 
-The application includes a comprehensive logging system that provides both console output and file logging.
+The application includes a logging system that provides console output and file logging.
 
 ### Environment Variables
 
-You can customize logging behavior using these environment variables:
+You can customize logging behavior using these CLI flags:
 
-- `LOG_LEVEL`: Set the logging level (`error`, `warn`, `info`, `debug`). Default: `info`
-- `LOG_CONSOLE`: Enable/disable console logging (`true`/`false`). Default: `true`
-- `LOG_FILE`: Enable/disable file logging (`true`/`false`). Default: `true`
-- `LOG_FILE_PATH`: Custom path for the log file. Default: `create-poly-app.log`
-- `LOG_COLORIZE`: Enable/disable colored console output (`true`/`false`). Default: `true`
+- `--log-level <level>`: Set the logging level (`error`, `warn`, `info`, `debug`). Default: `info`
+- `--log-console`: Enable console logging (default behavior)
+- `--no-log-console`: Disable console logging
+- `--log-file`: Enable file logging (default behavior)
+- `--no-log-file`: Disable file logging
+- `--log-file-path <path>`: Set custom log file path. Default: `create-poly-app.log`
+- `--log-colorize`: Enable colored console output (default behavior)
+- `--no-log-colorize`: Disable colored console output
 
 ### Examples
 
 ```bash
 # Run with debug logging
-LOG_LEVEL=debug npx create-poly-app
+npx create-poly-app --log-level debug
 
 # Disable file logging
-LOG_FILE=false npx create-poly-app
+npx create-poly-app --no-log-file
 
 # Use custom log file location
-LOG_FILE_PATH=/tmp/my-app.log npx create-poly-app
+npx create-poly-app --log-file-path /tmp/my-app.log
+
+# Disable console logging, use error level only
+npx create-poly-app --no-log-console --log-level error
+
+# Disable all logging
+npx create-poly-app --no-log-console --no-log-file
 ```
 
-## 📦 Publishing & Releases
+## Publishing & Releases
 
-This project uses automated CI/CD pipelines for professional package management:
+This project uses automated CI/CD pipelines for package management:
 
 ### Automated Publishing
 
@@ -373,9 +382,7 @@ This project uses automated CI/CD pipelines for professional package management:
 - Git tagging for releases
 - NPM version synchronization
 
-## 🤝 Contributing
-
-We welcome contributions! Here's how to get started:
+## Contributing
 
 ### Quick Start for Contributors
 
@@ -420,22 +427,22 @@ pnpm scaffold:feature
 
 This creates the proper feature structure with templates, codemods, and configuration.
 
-## 📄 License
+## License
 
 This project is licensed under the **ISC License**.
 
 ### ISC License Summary
 
-- ✅ **Commercial use** - Use in commercial projects
-- ✅ **Modification** - Modify the source code
-- ✅ **Distribution** - Distribute original or modified code
-- ✅ **Private use** - Use privately
-- ❌ **Warranty** - No warranty provided
-- ❌ **Liability** - Author not liable for damages
+- Commercial use - Use in commercial projects
+- Modification - Modify the source code
+- Distribution - Distribute original or modified code
+- Private use - Use privately
+- No warranty provided
+- Author not liable for damages
 
 See the [LICENSE](LICENSE) file for full details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Apollo Server](https://www.apollographql.com/docs/apollo-server/) - GraphQL server
 - [Prisma](https://www.prisma.io/) - Database ORM
@@ -446,6 +453,8 @@ See the [LICENSE](LICENSE) file for full details.
 
 ---
 
-**Built with ❤️ for modern development workflows**
-
 For more information, visit our [documentation](docs/) or [open an issue](issues/).
+
+```
+
+```

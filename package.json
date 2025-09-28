@@ -1,6 +1,6 @@
 {
   "name": "create-poly-app",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A powerful CLI tool for scaffolding modern polyglot applications with React, GraphQL, Prisma, and more",
   "type": "module",
   "main": "./dist/main.cjs",
