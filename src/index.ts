@@ -24,7 +24,6 @@ async function main() {
   logger.infoFileOnly('main', 'Starting create-poly-app')
 
   try {
-    // Step 1: Check for existing presets and offer to load one
     console.log('\n🚀 Welcome to Create Poly App!\n')
 
     const presetLoadForm = await createPresetLoadForm(createPolyAppForm.id)
@@ -34,9 +33,7 @@ async function main() {
 
     let answers: Record<string, any>
 
-    // Step 2: Load preset or run main form
     if (presetChoice.selectedPreset && presetChoice.selectedPreset !== 'none') {
-      // Load the selected preset
       const preset = await defaultPresetManager.getPreset(presetChoice.selectedPreset)
       if (preset) {
         console.log(`\n📂 Loading preset: "${preset.name}"`)
@@ -52,7 +49,6 @@ async function main() {
         })
       }
     } else {
-      // Run the main form normally
       answers = await runForm(createPolyAppForm, {
         validateOnChange: true,
         autoSave: true,
@@ -96,18 +92,11 @@ async function main() {
     const featureConfigurations = extractFeatureConfigurations(allAnswers, features)
     logger.infoFileOnly('main', 'Extracted feature configurations: %o', featureConfigurations)
 
-    console.log('\n🎯 Creating project with features:', features.join(', '))
-
-    await scaffoldProject(projectName, projectPath, features, featureConfigurations, allAnswers)
-
-    console.log(`\n✅ Project "${projectName}" created successfully!`)
-    console.log(`📁 Location: ${projectPath}`)
-
-    // Step 4: Offer to save as preset (only if we didn't load from a preset)
     const usedPreset = presetChoice.selectedPreset && presetChoice.selectedPreset !== 'none'
 
     if (!usedPreset) {
       console.log('\n💾 Would you like to save your configuration as a preset for future use?')
+      console.log('   This will be saved before project creation, so you can reuse it even if scaffolding fails.')
 
       try {
         const savePrompt = createSavePresetPromptForm()
@@ -145,13 +134,19 @@ async function main() {
           }
         }
       } catch (saveError) {
-        // Don't fail the entire process if preset saving fails
         console.log('\n⚠️  Preset saving was cancelled or failed')
         logger.error('main', 'Preset saving failed: %s', saveError)
       }
     } else {
       logger.infoFileOnly('main', 'Preset was used, skipping save prompt')
     }
+
+    console.log('\n🎯 Creating project with features:', features.join(', '))
+
+    await scaffoldProject(projectName, projectPath, features, featureConfigurations, allAnswers)
+
+    console.log(`\n✅ Project "${projectName}" created successfully!`)
+    console.log(`📁 Location: ${projectPath}`)
 
     console.log('\n🚀 Next steps:')
     console.log(`   cd ${projectName}`)
