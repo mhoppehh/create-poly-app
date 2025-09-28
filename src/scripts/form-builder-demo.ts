@@ -22,7 +22,6 @@ Let's get started...
 `)
 
   try {
-
     console.log('📝 Step 1: Basic Form Information')
     const basicAnswers = await runForm(formBuilderForm, {
       validateOnChange: true,

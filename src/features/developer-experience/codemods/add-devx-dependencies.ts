@@ -1,7 +1,7 @@
 import type { CodeMod } from '../../../types'
 import { readFileSync, writeFileSync } from 'fs'
 
-export const addDevxScripts: CodeMod = (filePath: string, config?: Record<string, any>) => {
+export const addDevxScripts: CodeMod = (filePath: string) => {
   // Read and parse package.json
   const text = readFileSync(filePath, 'utf-8')
   const packageJson = JSON.parse(text)

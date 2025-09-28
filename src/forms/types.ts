@@ -141,4 +141,34 @@ export interface FormEngineOptions {
   validateOnBlur?: boolean
   autoSave?: boolean
   saveKey?: string
+  presetAnswers?: Record<string, any>
+}
+
+// Preset System Types
+export interface Preset {
+  id: string
+  name: string
+  description?: string
+  formId: string
+  answers: Record<string, any>
+  tags?: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PresetMetadata {
+  id: string
+  name: string
+  description?: string
+  formId: string
+  tags?: string[]
+  createdAt: string
+  updatedAt: string
+  answerCount: number
+}
+
+export interface PresetManagerOptions {
+  storageKey?: string
+  presetFilePath?: string
+  createDirectoryIfNotExists?: boolean
 }

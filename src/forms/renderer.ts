@@ -1,5 +1,5 @@
 import prompts from 'prompts'
-import { Form, Question, QuestionType, SelectOption } from './types'
+import { Form, Question, QuestionType } from './types'
 import { FormEngine } from './engine'
 
 export class FormRenderer {
@@ -53,6 +53,13 @@ export class FormRenderer {
       const groupAnswers: Record<string, any> = {}
 
       for (const question of questions) {
+        const existingAnswer = this.engine.getAnswer(question.id)
+
+        if (existingAnswer !== undefined) {
+          groupAnswers[question.id] = existingAnswer
+          continue
+        }
+
         const promptQuestion = this.questionToPrompt(question)
 
         try {
@@ -63,7 +70,7 @@ export class FormRenderer {
             },
           })
 
-          if (!answer.hasOwnProperty(question.id)) {
+          if (answer[question.id] === undefined) {
             shouldContinue = false
             break
           }

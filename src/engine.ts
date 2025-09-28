@@ -1,7 +1,6 @@
 import * as path from 'path'
 import * as fs from 'fs'
 import * as fsp from 'fs/promises'
-import { Project } from 'ts-morph'
 import handlebars from 'handlebars'
 import { execSync } from 'child_process'
 import { glob } from 'glob'
@@ -151,7 +150,7 @@ export async function scaffoldProject(
     featureName: string,
     featureConfig: Record<string, any> = {},
   ) {
-    const { source, destination, context = {} } = template
+    const { source } = template
 
     let sourcePath = source
     if (!path.isAbsolute(sourcePath)) {

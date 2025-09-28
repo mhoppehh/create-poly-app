@@ -21,7 +21,6 @@ export async function createFile(filePath: string, content: string, source: stri
   const directory = path.dirname(filePath)
 
   try {
-
     await fs.mkdir(directory, { recursive: true })
     await fs.writeFile(filePath, content, { encoding: 'utf8' })
     logger.fileCreated(source, filePath)
