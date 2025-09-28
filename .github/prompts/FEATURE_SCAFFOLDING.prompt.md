@@ -6,308 +6,251 @@ mode: agent
 
 ## Overview
 
-This project includes an automated feature scaffolding script that generates new features following established patterns and conventions. The script creates properly structured feature folders with templates, codemods, and configuration files.
+This prompt guides AI models to scaffold new features for the create-poly-app project. The focus is on creating the proper structure, configuration, and form questions - NOT on implementing the actual functionality. Implementation details should be left as placeholders or TODOs for human developers.
 
-## Usage
+## Your Task
 
-### Basic Command
+When asked to scaffold a new feature, you should:
 
-```bash
-pnpm scaffold:feature <feature-name>
-```
+1. **Analyze the feature request** to understand what the feature should do
+2. **Create the feature scaffolding** using the scaffold script
+3. **Define form questions** for user configuration
+4. **Set up feature structure** with proper stages and dependencies
+5. **Leave implementation as TODOs** for human developers
 
-### Available Options
+## Step-by-Step Process
 
-- `--display-name <name>` - Human-readable name for the feature
-- `--description <text>` - Brief description of what the feature does
-- `--depends-on <features>` - Comma-separated list of feature dependencies
-- `--templates` - Generate templates directory with example .hbs files
-- `--template-files <files>` - Comma-separated list of specific template files to create (empty files)
-- `--codemods` - Generate codemods directory with example file modification functions
-- `--scripts` - Include scripts configuration in the feature definition
+### 1. Run the Scaffold Script
 
-### Examples
-
-**Simple feature:**
+Use the scaffold script to create the basic structure:
 
 ```bash
-pnpm scaffold:feature database
+pnpm scaffold:feature <feature-name> \
+  --display-name "<Human Readable Name>" \
+  --description "<Brief description>" \
+  --depends-on "<comma-separated-dependencies>" \
+  --templates --codemods
 ```
 
-**Full-featured scaffold:**
+**Guidelines for scaffold options:**
 
-```bash
-pnpm scaffold:feature auth-system \
-  --display-name "Authentication System" \
-  --description "JWT-based authentication with role management" \
-  --depends-on "vite,apollo-server" \
-  --templates --codemods --scripts
-```
+- Choose a descriptive `kebab-case` feature name
+- Write a clear, concise description
+- Identify logical dependencies on existing features
+- Always include `--templates` and `--codemods` for flexibility
 
-**Custom template files:**
+### 2. Define Form Questions
 
-```bash
-pnpm scaffold:feature database \
-  --display-name "Database Layer" \
-  --description "Database configuration and models" \
-  --template-files "schema.prisma.hbs,config/database.json.hbs,src/models/user.ts.hbs,src/index.ts.hbs"
-```
+After scaffolding, you need to update the feature's configuration to include form questions that collect user preferences. These questions should cover:
 
-## Generated Structure
+**Common Question Types:**
 
-When scaffolding a feature called `my-feature`, the script creates:
+- **Implementation choice**: Which library/framework to use (e.g., GraphQL client, database provider)
+- **Feature toggles**: Optional functionality that can be enabled/disabled
+- **Configuration options**: Customizable settings (ports, names, paths)
+- **Integration preferences**: How to integrate with other features
 
-```
-src/features/my-feature/
-├── index.ts                           # Feature definition with stages
-├── templates/ (if --templates)        # Handlebars template files
-│   └── example.html.hbs
-└── codemods/ (if --codemods)          # File modification functions
-    └── example-my-feature-codemod.ts
-```
-
-## Key Concepts
-
-### Feature Definition
-
-Every feature exports a `Feature` object with:
-
-- **id**: kebab-case identifier
-- **name**: Display name
-- **description**: Brief explanation
-- **dependsOn**: Array of prerequisite features
-- **stages**: Array of installation/setup steps
-
-### Stages
-
-Features execute in stages that can include:
-
-- **scripts**: Shell commands to run
-- **templates**: Handlebars files to process and copy
-- **mods**: Code modifications using ts-morph
-- **activatedBy**: Conditional activation rules that determine if the stage should run
-
-#### Stage Activation System
-
-Stages can be conditionally activated based on user inputs through the `activatedBy` property. This allows features to include optional functionality or different implementations based on user preferences.
-
-**Stage Structure:**
+**Question Structure Examples:**
 
 ```typescript
+// Single choice selection
 {
-  name: 'stage-name',
-  activatedBy?: FeatureActivationRule | FeatureActivationCondition,
-  scripts?: InstallScript[],
-  templates?: InstallTemplate[],
-  mods?: Record<string, CodeMod[]>
+  name: 'database-provider',
+  prompt: 'Which database provider would you like to use?',
+  type: 'select',
+  choices: [
+    { title: 'PostgreSQL', value: 'postgresql' },
+    { title: 'MySQL', value: 'mysql' },
+    { title: 'SQLite', value: 'sqlite' }
+  ]
+}
+
+// Multiple choice selection
+{
+  name: 'auth-features',
+  prompt: 'Which authentication features do you need?',
+  type: 'multiselect',
+  choices: [
+    { title: 'JWT Authentication', value: 'jwt' },
+    { title: 'Social Login', value: 'social' },
+    { title: 'Two-Factor Auth', value: '2fa' },
+    { title: 'Role-Based Access', value: 'rbac' }
+  ]
+}
+
+// Boolean toggle
+{
+  name: 'enable-advanced-features',
+  prompt: 'Enable advanced configuration options?',
+  type: 'confirm',
+  initial: false
+}
+
+// Text input
+{
+  name: 'api-port',
+  prompt: 'What port should the API server run on?',
+  type: 'text',
+  initial: '4000'
 }
 ```
 
-**Activation Conditions:**
+### 3. Structure Feature Stages
 
-- `ActivationConditions.equals(questionId, value)` - Activates when answer equals specific value
-- `ActivationConditions.includesValue(questionId, value)` - Activates when array answer includes value
-- `ActivationConditions.isOneOf(questionId, values)` - Activates when answer is one of provided values
-- `ActivationConditions.custom(questionId, evaluator)` - Custom evaluation function
+Design stages that handle different user configurations using conditional activation:
 
-**Activation Rules (for complex logic):**
+**Stage Design Principles:**
 
-- `ActivationRules.and(...conditions)` - All conditions must be true
-- `ActivationRules.or(...conditions)` - At least one condition must be true
+- **Base stage**: Always runs, sets up core functionality
+- **Choice-specific stages**: Activated based on user selections
+- **Optional feature stages**: Activated by boolean toggles
+- **Integration stages**: Activated when multiple features are combined
 
-**Examples:**
+**Example Stage Structure:**
 
 ```typescript
-// Simple condition - only run if GraphQL client is Apollo
-{
-  name: 'setup-apollo-client',
-  activatedBy: ActivationConditions.equals('graphqlClient', 'apollo-client'),
-  scripts: [{ src: 'pnpm install @apollo/client', dir: 'web' }]
-}
-
-// Complex condition - run if both conditions are met
-{
-  name: 'setup-advanced-features',
-  activatedBy: ActivationRules.and(
-    ActivationConditions.includesValue('features', 'advanced-mode'),
-    ActivationConditions.equals('databaseProvider', 'postgresql')
-  ),
-  scripts: [{ src: 'pnpm install advanced-pg-features', dir: 'api' }]
-}
-
-// Custom evaluation
-{
-  name: 'conditional-setup',
-  activatedBy: ActivationConditions.custom('customField', (value, allAnswers) => {
-    return value === 'special' && allAnswers.environment === 'production'
-  }),
-  templates: [{ source: 'templates/production', destination: 'config' }]
-}
+stages: [
+  {
+    name: 'base-setup',
+    // Always runs - core setup
+    scripts: [{ src: 'pnpm install core-package', dir: 'api' }],
+    templates: [{ source: 'templates/base', destination: 'api/src' }],
+  },
+  {
+    name: 'setup-postgresql',
+    activatedBy: ActivationConditions.equals('database-provider', 'postgresql'),
+    scripts: [
+      // TODO: Add PostgreSQL specific installation commands
+    ],
+    templates: [
+      // TODO: Add PostgreSQL specific templates
+    ],
+  },
+  {
+    name: 'setup-mysql',
+    activatedBy: ActivationConditions.equals('database-provider', 'mysql'),
+    scripts: [
+      // TODO: Add MySQL specific installation commands
+    ],
+  },
+  {
+    name: 'enable-advanced-config',
+    activatedBy: ActivationConditions.equals('enable-advanced-features', true),
+    templates: [
+      // TODO: Add advanced configuration templates
+    ],
+  },
+]
 ```
 
-### Templates
+### 4. Create Placeholder Templates
+
+Generate template files with placeholder content:
+
+**Template Guidelines:**
 
 - Use `.hbs` extension for Handlebars templates
-- Support variable interpolation: `{{variableName}}`
+- Include variable placeholders: `{{variableName}}`
+- Add TODO comments for implementation details
+- Structure files logically (config, source, documentation)
 
-### Codemods
+**Example Template Content:**
 
-- Functions that modify existing files using ts-morph
-- Common use cases: updating package.json, adding imports, modifying configs
-- **Use sparingly**: Only when terminal commands or templates cannot achieve the desired result
-
-## Implementation Strategy
-
-### Stage Activation Strategy
-
-When designing features with multiple stages, consider using conditional activation to:
-
-1. **Support multiple implementations**: Different GraphQL clients, database providers, or styling frameworks
-2. **Enable optional features**: Advanced configurations, development tools, or integrations
-3. **Environment-specific setup**: Different configurations for development vs production
-4. **User preference customization**: Allow users to opt-in/out of specific functionality
-
-**Best Practices for Stage Activation:**
-
-- **Use descriptive stage names** that clearly indicate what functionality they provide
-- **Group related functionality** in single stages rather than splitting unnecessarily
-- **Consider dependencies** between stages when using activation conditions
-- **Test activation logic** by ensuring all combinations of user inputs work correctly
-- **Document activation requirements** in feature descriptions and comments
-
-**Common Activation Patterns:**
-
-```typescript
-// Multiple implementation pattern (GraphQL clients)
-stages: [
-  {
-    name: 'setup-apollo-client',
-    activatedBy: ActivationConditions.equals('graphqlClient', 'apollo-client'),
-    // Apollo-specific setup
-  },
-  {
-    name: 'setup-urql',
-    activatedBy: ActivationConditions.equals('graphqlClient', 'urql'),
-    // URQL-specific setup
-  },
-]
-
-// Optional feature pattern
-stages: [
-  {
-    name: 'basic-setup',
-    // Always runs - no activatedBy
-    scripts: [{ src: 'npm install core-package' }],
-  },
-  {
-    name: 'enable-advanced-features',
-    activatedBy: ActivationConditions.equals('enableAdvanced', true),
-    scripts: [{ src: 'npm install advanced-package' }],
-  },
-]
-
-// Conditional dependency pattern
-stages: [
-  {
-    name: 'setup-database-with-auth',
-    activatedBy: ActivationRules.and(
-      ActivationConditions.includesValue('features', 'database'),
-      ActivationConditions.includesValue('features', 'authentication'),
-    ),
-    scripts: [{ src: 'npm install auth-db-integration' }],
-  },
-]
+```handlebars
+{{! src/features/my-feature/templates/config.json.hbs }}
+{ "feature": "{{featureName}}", "provider": "{{databaseProvider}}",
+{{#if enableAdvancedFeatures}}
+  "advanced": { // TODO: Implement advanced configuration options },
+{{/if}}
+// TODO: Add feature-specific configuration }
 ```
 
-### When to Use Terminal Commands (Preferred)
+### 5. Create Codemod Placeholders
 
-Use scripts in the `scripts` array for:
-
-- Installing dependencies: `pnpm install package-name`
-- Initializing tools: `npx create-react-app`, `prisma init`
-- Running setup commands: `pnpm build`, `git init`
-- Package management operations: `npm update`, `npm uninstall`
-
-Example:
+Generate codemod files with function signatures and TODO comments:
 
 ```typescript
-scripts: [
-  { src: 'pnpm install @prisma/client prisma', dir: 'api' },
-  { src: 'npx prisma init', dir: 'api' },
-]
-```
+// src/features/my-feature/codemods/example-codemod.ts
+import type { CodeMod } from '../../../types'
 
-### When to Use Templates (Secondary)
+export const exampleCodemod: CodeMod = (project, filePath, options) => {
+  // TODO: Implement file modifications
+  // This codemod should:
+  // - Modify existing files to integrate the new feature
+  // - Add imports, exports, or configuration changes
+  // - Update package.json dependencies if needed
 
-Use templates for:
-
-- Creating new source code files
-- Configuration files with dynamic content
-- Documentation files
-- Any file that needs variable interpolation
-
-Example:
-
-```typescript
-templates: [
-  {
-    source: 'src/features/my-feature/templates',
-    destination: 'api/src',
-  },
-]
-```
-
-### When to Use Codemods (Last Resort)
-
-Use codemods only for:
-
-- Complex modifications to existing files that can't be automated via CLI
-- Adding specific imports or exports to existing files
-- Modifying configuration objects in existing files
-- Workspace configuration updates (pnpm-workspace.yaml, etc.)
-
-Example:
-
-```typescript
-mods: {
-  'pnpm-workspace.yaml': [addToWorkspace],
-  'existing-config.js': [modifyExistingConfig],
+  console.log(`Modifying ${filePath} for feature integration`)
+  // Implementation goes here
 }
 ```
 
-## Best Practices for AI Models
+## What NOT to Implement
 
-When creating new features:
+**Avoid these implementation details:**
 
-1. **Use descriptive names** in kebab-case (e.g., `stripe-payments`, `user-auth`)
-2. **Include dependencies** if your feature builds on others
-3. **Plan for conditional functionality** using stage activation when features have multiple implementations or optional components
-4. **Design activation logic carefully** to ensure all user input combinations are handled properly
-5. **Prefer terminal commands over codemods** when possible (e.g., use `pnpm install package` instead of manually modifying package.json)
-6. **Use templates for all new files** unless the file can be created via terminal commands (e.g., configuration files, source code)
-7. **Add codemods only when necessary** for complex file modifications that can't be achieved via terminal commands
-8. **Follow the existing patterns** in other features for consistency
-9. **Test activation conditions** by considering different user input scenarios
-10. **Document stage purpose** with clear, descriptive stage names and comments
+- Actual package installation commands (leave as TODOs)
+- Specific template file contents (use placeholders)
+- Detailed codemod implementations (provide structure only)
+- Real configuration values (use example/placeholder values)
+- Functional code logic (focus on structure)
 
-### Stage Activation Guidelines
+## Focus Areas
 
-- **Always activate stages**: Stages without `activatedBy` run unconditionally when the feature is enabled
-- **Conditional stages**: Use `activatedBy` for stages that should only run under specific conditions
-- **Complex conditions**: Use `ActivationRules.and()` and `ActivationRules.or()` for multi-condition logic
-- **Custom logic**: Use `ActivationConditions.custom()` for complex evaluation scenarios
-- **Question dependencies**: Ensure activation questions are defined in the feature's `configuration` array
-- **Logical grouping**: Group related setup steps in single stages rather than splitting unnecessarily
+**DO focus on:**
 
-### Rule Priority
+- ✅ Feature structure and organization
+- ✅ Form questions for user input
+- ✅ Stage activation logic and conditions
+- ✅ Dependencies between features
+- ✅ Template file organization
+- ✅ Codemod function signatures
+- ✅ Proper naming conventions
 
-1. **Terminal commands first**: If something can be achieved with a terminal command (installing packages, initializing configs), prefer that over file modifications
-2. **Templates for new files**: If a new file needs to be created, always use a template (.hbs file) to ensure consistency and proper structure
-3. **Codemods as last resort**: Only use codemods for complex modifications that cannot be achieved through terminal commands or templates
+**DON'T implement:**
 
-## Naming Conventions
+- ❌ Actual installation scripts
+- ❌ Real template content
+- ❌ Functional codemod logic
+- ❌ Specific package versions
+- ❌ Detailed configuration files
 
-- Feature names: `kebab-case` (lowercase with hyphens)
-- Display names: `Title Case`
-- File names: Follow existing project patterns
-- Function names: `camelCase`
+## Example Workflow
+
+When asked to scaffold a "payment-processing" feature:
+
+1. **Run scaffold script**:
+
+   ```bash
+   pnpm scaffold:feature payment-processing \
+     --display-name "Payment Processing" \
+     --description "Integrate payment providers for e-commerce functionality" \
+     --depends-on "apollo-server,database" \
+     --templates --codemods
+   ```
+
+2. **Add form questions** for payment provider selection, webhook configuration, etc.
+
+3. **Create stages** for different providers (Stripe, PayPal, Square) using conditional activation
+
+4. **Generate template files** with placeholder content for API routes, database schemas, client components
+
+5. **Create codemod placeholders** for integrating payment routes with existing server setup
+
+6. **Document TODOs** for implementation details that developers need to complete
+
+## Success Criteria
+
+A properly scaffolded feature should have:
+
+- [ ] Clear, descriptive feature name and description
+- [ ] Comprehensive form questions covering all user choices
+- [ ] Well-structured stages with proper activation conditions
+- [ ] Organized template directory with placeholder files
+- [ ] Codemod functions with clear TODO comments
+- [ ] Proper dependencies declared
+- [ ] No actual implementation details (left as TODOs)
+
+## Remember
+
+Your job is to create the **structure and configuration**, not the **implementation**. Leave detailed implementation work for human developers who understand the specific requirements and can test the functionality properly.
