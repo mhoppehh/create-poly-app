@@ -11,14 +11,9 @@
       "answers": {
         "projectName": "my-awesome-project",
         "projectDescription": "",
-        "projectWorkspaces": [
-          "graphql-server",
-          "react-webapp"
-        ],
+        "projectWorkspaces": ["graphql-server", "react-webapp"],
         "graphqlClient": "apollo-client",
-        "apiFeatures": [
-          "database"
-        ],
+        "apiFeatures": ["database"],
         "enableDevX": true,
         "prisma.databaseProvider": "postgresql",
         "prisma.enableStudio": true,
@@ -38,9 +33,7 @@
       "answers": {
         "projectName": "my-awesome-project",
         "projectDescription": "",
-        "projectWorkspaces": [
-          "react-webapp"
-        ],
+        "projectWorkspaces": ["react-webapp"],
         "enableDevX": true,
         "developer-experience.includeAccessibility": true,
         "developer-experience.includeImportSorting": true,
