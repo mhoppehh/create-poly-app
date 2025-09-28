@@ -2,7 +2,6 @@ import { Preset, PresetMetadata, PresetManagerOptions } from './types'
 import { promises as fs } from 'fs'
 import * as path from 'path'
 import { homedir } from 'os'
-import { loadPresetConfig } from '../config'
 
 export class PresetManager {
   private presetFilePath: string
@@ -295,9 +294,8 @@ export class PresetManager {
   }
 }
 
-// Export a default instance configured with environment variables
-const presetConfig = loadPresetConfig()
+// Export a default instance with simple default configuration
 export const defaultPresetManager = new PresetManager({
-  presetFilePath: presetConfig.filePath,
-  createDirectoryIfNotExists: presetConfig.createDirectoryIfNotExists,
+  presetFilePath: path.join(homedir(), 'create-poly-app', 'presets.json'),
+  createDirectoryIfNotExists: true,
 })
