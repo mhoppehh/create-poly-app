@@ -1,5 +1,5 @@
 import { FEATURES } from '../features'
-import type { Feature, FeatureActivationCondition, FeatureActivationRule } from '../types'
+import type { FeatureActivationCondition, FeatureActivationRule } from '../types'
 import type { Question, QuestionGroup } from './types'
 
 export function evaluateCondition(

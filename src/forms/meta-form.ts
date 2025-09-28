@@ -1,4 +1,4 @@
-import { FormBuilder, QuestionHelpers, ValidationHelpers, ConditionalHelpers, OptionHelpers } from './helpers'
+import { FormBuilder, QuestionHelpers, ValidationHelpers, ConditionalHelpers } from './helpers'
 
 export const formBuilderForm = new FormBuilder('form-builder', '🎯 Form Builder')
   .description('Create your own custom form using our powerful form system')
@@ -138,7 +138,6 @@ export function generateDynamicFormQuestions(numberOfGroups: number): FormBuilde
     )
 
     for (let questionIndex = 0; questionIndex < 5; questionIndex++) {
-
       const questionNum = questionIndex + 1
 
       const questionCondition = [ConditionalHelpers.greaterThan(`group${groupIndex}QuestionCount`, questionIndex)]

@@ -21,7 +21,7 @@ function showVersion() {
     const packageJsonPath = path.join(__dirname, '../package.json')
     const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
     console.log(`v${packageJson.version}`)
-  } catch (error) {
+  } catch {
     console.log('version unknown')
   }
 }
