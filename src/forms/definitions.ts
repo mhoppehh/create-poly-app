@@ -70,13 +70,127 @@ export const createPolyAppForm: Form = {
       ],
     },
     {
+      id: 'mobile-setup',
+      title: 'Mobile Configuration',
+      description: 'Configure your React Native mobile application',
+      showIf: [
+        {
+          dependsOn: 'projectWorkspaces',
+          condition: { type: 'includes', value: 'mobile-app' },
+        },
+      ],
+      questions: [
+        {
+          id: 'mobileFramework',
+          type: 'select',
+          title: 'Mobile Framework',
+          description: 'Choose your React Native development approach',
+          defaultValue: 'expo',
+          required: true,
+          options: [
+            {
+              label: 'Expo (Managed Workflow)',
+              value: 'expo',
+              description: 'Quick setup with managed development workflow',
+            },
+            {
+              label: 'React Native CLI (Bare)',
+              value: 'react-native-cli',
+              description: 'Traditional React Native CLI setup with full control',
+            },
+          ],
+        },
+        {
+          id: 'mobileAppName',
+          type: 'text',
+          title: 'Mobile App Name',
+          description: 'The display name for your mobile application',
+          defaultValue: 'MyApp',
+          placeholder: 'MyApp',
+          required: true,
+          validation: [
+            {
+              type: 'required',
+              message: 'App name is required',
+            },
+            {
+              type: 'pattern',
+              value: /^[A-Za-z][A-Za-z0-9\s]*$/,
+              message: 'App name must start with a letter and contain only letters, numbers, and spaces',
+            },
+          ],
+        },
+        {
+          id: 'bundleId',
+          type: 'text',
+          title: 'Bundle Identifier',
+          description: 'Unique identifier for your app (e.g., com.yourcompany.appname)',
+          defaultValue: 'com.example.myapp',
+          placeholder: 'com.example.myapp',
+          required: true,
+          validation: [
+            {
+              type: 'required',
+              message: 'Bundle identifier is required',
+            },
+            {
+              type: 'pattern',
+              value: /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/,
+              message: 'Bundle ID must follow reverse domain notation (e.g., com.example.app)',
+            },
+          ],
+        },
+        {
+          id: 'enableNativeModules',
+          type: 'boolean',
+          title: 'Enable Native Modules',
+          description: 'Include setup for common native modules (camera, location, push notifications, etc.)',
+          defaultValue: false,
+        },
+        {
+          id: 'mobileNavigation',
+          type: 'select',
+          title: 'Navigation Library',
+          description: 'Choose navigation solution for your mobile app',
+          defaultValue: 'react-navigation',
+          required: true,
+          options: [
+            {
+              label: 'React Navigation 6',
+              value: 'react-navigation',
+              description: 'Most popular React Native navigation library',
+            },
+            {
+              label: 'React Native Navigation (Wix)',
+              value: 'react-native-navigation',
+              description: 'Native navigation performance',
+            },
+            {
+              label: 'None',
+              value: 'none',
+              description: 'Set up navigation manually later',
+            },
+          ],
+        },
+      ],
+    },
+    {
       id: 'frontend-setup',
       title: 'Frontend Configuration',
       description: 'Choose your frontend setup',
       showIf: [
         {
           dependsOn: 'projectWorkspaces',
-          condition: { type: 'includes', value: 'react-webapp' },
+          condition: {
+            type: 'custom',
+            evaluator: (value: any, allAnswers: Record<string, any>) => {
+              const workspaces = allAnswers.projectWorkspaces || []
+              const hasGraphQLServer = workspaces.includes('graphql-server')
+              const hasReactWebapp = workspaces.includes('react-webapp')
+              const hasMobileApp = workspaces.includes('mobile-app')
+              return hasGraphQLServer && (hasReactWebapp || hasMobileApp)
+            },
+          },
         },
       ],
       questions: [
@@ -84,7 +198,7 @@ export const createPolyAppForm: Form = {
           id: 'graphqlClient',
           type: 'select',
           title: 'Which GraphQL client would you like to use?',
-          description: 'Choose the GraphQL client library for your frontend application',
+          description: 'Choose the GraphQL client library for your applications',
           required: false,
           options: [
             {
@@ -114,12 +228,6 @@ export const createPolyAppForm: Form = {
             },
           ],
           defaultValue: 'apollo-client',
-          showIf: [
-            {
-              dependsOn: 'projectWorkspaces',
-              condition: { type: 'includes', value: 'graphql-server' },
-            },
-          ],
         },
       ],
     },

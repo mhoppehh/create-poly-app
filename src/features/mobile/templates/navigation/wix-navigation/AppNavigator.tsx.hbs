@@ -1,0 +1,54 @@
+import { Navigation } from 'react-native-navigation';
+import HomeScreen from '../screens/HomeScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+
+// Register components
+Navigation.registerComponent('Home', () => HomeScreen);
+Navigation.registerComponent('Profile', () => ProfileScreen);
+
+export const startApp = () => {
+  Navigation.setRoot({
+    root: {
+      bottomTabs: {
+        children: [
+          {
+            stack: {
+              children: [
+                {
+                  component: {
+                    name: 'Home',
+                    options: {
+                      topBar: {
+                        title: {
+                          text: 'Home'
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            stack: {
+              children: [
+                {
+                  component: {
+                    name: 'Profile',
+                    options: {
+                      topBar: {
+                        title: {
+                          text: 'Profile'
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  });
+};

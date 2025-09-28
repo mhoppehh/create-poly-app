@@ -1,0 +1,42 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export const storage = {
+  async get(key: string): Promise<string | null> {
+    try {
+      return await AsyncStorage.getItem(key);
+    } catch (error) {
+      console.error('Storage get error:', error);
+      return null;
+    }
+  },
+
+  async set(key: string, value: string): Promise<boolean> {
+    try {
+      await AsyncStorage.setItem(key, value);
+      return true;
+    } catch (error) {
+      console.error('Storage set error:', error);
+      return false;
+    }
+  },
+
+  async remove(key: string): Promise<boolean> {
+    try {
+      await AsyncStorage.removeItem(key);
+      return true;
+    } catch (error) {
+      console.error('Storage remove error:', error);
+      return false;
+    }
+  },
+
+  async clear(): Promise<boolean> {
+    try {
+      await AsyncStorage.clear();
+      return true;
+    } catch (error) {
+      console.error('Storage clear error:', error);
+      return false;
+    }
+  },
+};
