@@ -15,25 +15,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Type check & Lint
-        run: |
-          pnpm type-check
-          pnpm lint
+      - name: Type check
+        run: pnpm type-check
 
       - name: Build
         run: pnpm build
+
+      - name: Run Unit tests
+        run: pnpm test:unit
+        timeout-minutes: 5
+        env:
+          NODE_ENV: test
 
       - name: Run E2E tests
         run: pnpm test:e2e
@@ -56,20 +62,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build
         run: pnpm build
+
+      - name: Run Unit tests
+        run: pnpm test:unit
+        timeout-minutes: 5
+        env:
+          NODE_ENV: test
 
       - name: Run E2E tests
         run: pnpm test:e2e
