@@ -1,0 +1,47 @@
+// Storybook Configuration for {{projectName}} UI Components
+// Component documentation and testing playground
+
+import type { StorybookConfig } from '@storybook/react-vite'
+
+const config: StorybookConfig = {
+  stories: ['../src/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  
+  addons: [
+    '@storybook/addon-essentials',
+    '@storybook/addon-interactions',
+    '@storybook/addon-links',
+    {{#if (includes designSystemFeatures "theming")}}
+    '@storybook/addon-themes',
+    {{/if}}
+    {{#if (gte accessibilityLevel "standard")}}
+    '@storybook/addon-a11y',
+    {{/if}}
+    // TODO: Add more Storybook addons based on requirements
+  ],
+  
+  framework: {
+    name: '@storybook/react-vite',
+    options: {},
+  },
+  
+  typescript: {
+    check: false,
+    checkOptions: {},
+    reactDocgen: 'react-docgen-typescript',
+    reactDocgenTypescriptOptions: {
+      shouldExtractLiteralValuesFromEnum: true,
+      propFilter: (prop) => (prop.parent ? !/node_modules/.test(prop.parent.fileName) : true),
+    },
+  },
+  
+  // TODO: Configure build settings
+  // TODO: Add custom webpack configuration if needed
+  // TODO: Configure static assets and public directory
+}
+
+export default config
+
+// TODO: Add custom Storybook configuration
+// TODO: Configure theme switching for component previews  
+// TODO: Add global decorators for component wrappers
+// TODO: Configure viewport settings for responsive testing

@@ -6,6 +6,7 @@ import type { Feature } from '../types'
 import { prisma } from './prisma'
 import { graphqlClient } from './graphql-client'
 import { developerExperience } from './developer-experience'
+import { uiComponentLibrary } from './ui-component-library'
 
 export const FEATURES: Record<string, Feature> = {
   projectDir,
@@ -15,4 +16,5 @@ export const FEATURES: Record<string, Feature> = {
   prisma: prisma,
   'graphql-client': graphqlClient,
   'developer-experience': developerExperience,
+  'ui-component-library': uiComponentLibrary,
 }

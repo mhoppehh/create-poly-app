@@ -1,0 +1,80 @@
+# {{projectName}} UI Shared Components
+
+Cross-platform UI component library for {{projectName}} supporting {{platforms}} platforms.
+
+## Features
+
+{{#if designSystemFeatures}}
+### Design System
+{{#each designSystemFeatures}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+{{#if componentCategories}}
+### Component Categories
+{{#each componentCategories}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+## Installation
+
+```bash
+# Install the shared component library
+pnpm add @{{projectName}}/ui-shared
+
+# For web projects
+import { Button, Card } from '@{{projectName}}/ui-shared'
+
+# For mobile projects (React Native)
+import { Button, Card } from '@{{projectName}}/ui-shared'
+```
+
+## Component Library: {{componentLibrary}}
+
+{{#if_eq componentLibrary "shadcn"}}
+This library uses shadcn/ui components that are automatically adapted for cross-platform use.
+{{else if_eq componentLibrary "package"}}
+This library integrates with {{packageLibrary}} for consistent component behavior.
+{{else}}
+This library provides custom components built specifically for {{projectName}}.
+{{/if}}
+
+## Accessibility
+
+Accessibility Level: {{accessibilityLevel}}
+
+All components follow WCAG guidelines and include:
+- Keyboard navigation support
+- Screen reader compatibility  
+- High contrast support
+- Semantic HTML structure
+
+## Development
+
+```bash
+# Start development server
+pnpm dev
+
+# Run tests
+pnpm test
+
+# Build for production
+pnpm build
+
+{{#if (includes integrations "storybook")}}
+# Start Storybook
+pnpm storybook
+{{/if}}
+```
+
+## TODO: Implementation Notes
+
+- [ ] Implement actual component library integration
+- [ ] Add platform detection and adaptation logic
+- [ ] Configure build system for cross-platform output
+- [ ] Add comprehensive component documentation
+- [ ] Implement theming and design token system
+- [ ] Add accessibility testing and validation
+- [ ] Configure package publishing and distribution

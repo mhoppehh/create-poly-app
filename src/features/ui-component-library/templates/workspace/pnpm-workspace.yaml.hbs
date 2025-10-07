@@ -1,0 +1,21 @@
+# UI Component Library Workspace Configuration
+# This file extends the main pnpm workspace to include UI component packages
+
+packages:
+  # Include existing workspace packages
+  - 'packages/*'
+  {{#if platforms}}
+  # UI Component Library packages
+  {{#each platforms}}
+  {{#if_eq this "web"}}
+  - 'packages/ui-web'
+  {{/if_eq}}
+  {{/each}}
+  {{#if (gt platforms.length 1)}}
+  - 'packages/ui-shared'  # Cross-platform shared components
+  {{/if}}
+  {{/if}}
+
+# TODO: Add additional workspace configuration for UI components
+# TODO: Configure package resolution and dependency hoisting
+# TODO: Add component library specific workspace scripts

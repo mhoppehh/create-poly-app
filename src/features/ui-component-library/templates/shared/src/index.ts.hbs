@@ -1,0 +1,26 @@
+// Main entry point for {{projectName}} UI Shared Components
+export * from './components'
+{{#if designSystemFeatures}}
+{{#if (includes designSystemFeatures 'tokens')}}
+export * from './tokens'
+{{/if}}
+{{#if (includes designSystemFeatures 'theming')}}
+export * from './theme'
+{{/if}}
+{{#if (includes designSystemFeatures 'typography')}}
+export * from './typography'
+{{/if}}
+{{/if}}
+
+{{#if integrations}}
+{{#if (includes integrations 'icons')}}
+export * from './icons'
+{{/if}}
+{{#if (includes integrations 'animations')}}
+export * from './animations'
+{{/if}}
+{{/if}}
+
+// TODO: Export additional shared utilities and hooks
+// TODO: Export platform-specific adapters when needed
+// TODO: Add conditional exports based on selected features

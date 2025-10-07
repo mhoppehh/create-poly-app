@@ -1,0 +1,25 @@
+// Workspace Integration Configuration
+// Updates main workspace files to include UI component library
+
+// Update main package.json scripts
+{
+  "scripts": {
+    {{#if (includes integrations "storybook")}}
+    "storybook": "pnpm -F @{{projectName}}/ui-shared storybook",
+    "build-storybook": "pnpm -F @{{projectName}}/ui-shared build-storybook",
+    {{/if}}
+    "build:ui": "pnpm -F @{{projectName}}/ui-shared build",
+    "dev:ui": "pnpm -F @{{projectName}}/ui-shared dev",
+    "test:ui": "pnpm -F @{{projectName}}/ui-shared test",
+    "lint:ui": "pnpm -F @{{projectName}}/ui-shared lint"
+  },
+  "devDependencies": {
+    // TODO: Add workspace-level dev dependencies for UI development
+  }
+}
+
+// TODO: Update .gitignore to include UI build artifacts
+// TODO: Update CI/CD configuration to build and test UI components  
+// TODO: Add UI component library documentation to main README
+// TODO: Configure package publishing for component library
+// TODO: Add component library deployment configuration

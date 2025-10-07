@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updatedAt": "2025-09-26T18:42:02.271Z",
+  "updatedAt": "2025-09-29T23:12:45.501Z",
   "presets": [
     {
       "id": "preset_1758908817349_9z3ym9piv",
@@ -39,6 +39,30 @@
         "developer-experience.includeImportSorting": true,
         "developer-experience.enableConventionalCommits": true,
         "developer-experience.enableSemanticRelease": false
+      }
+    },
+    {
+      "id": "preset_1759187565500_47593mkeo",
+      "createdAt": "2025-09-29T23:12:45.500Z",
+      "updatedAt": "2025-09-29T23:12:45.500Z",
+      "name": "openfga",
+      "formId": "create-poly-app",
+      "answers": {
+        "projectName": "my-awesome-project",
+        "projectDescription": "",
+        "projectWorkspaces": ["graphql-server", "react-webapp"],
+        "graphqlClient": "apollo-client",
+        "apiFeatures": ["database", "openfga"],
+        "enableDevX": false,
+        "prisma.databaseProvider": "postgresql",
+        "prisma.enableStudio": true,
+        "graphql-client.graphqlEndpoint": "http://localhost:4000/graphql",
+        "openfga.fgaServiceUrl": "http://localhost:8080",
+        "openfga.enableGraphQLDirective": true,
+        "openfga.enableModularArchitecture": true,
+        "openfga.includeBookModule": true,
+        "openfga.enableTestingFramework": false,
+        "openfga.enableDevWorkflow": false
       }
     }
   ]
