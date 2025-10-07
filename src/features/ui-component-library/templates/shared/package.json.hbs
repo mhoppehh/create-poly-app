@@ -1,0 +1,59 @@
+{
+  "name": "@{{projectName}}/ui-shared",
+  "version": "0.1.0",
+  "description": "Cross-platform shared UI components for {{projectName}}",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./components/*": {
+      "import": "./dist/components/*.esm.js",
+      "require": "./dist/components/*.js",
+      "types": "./dist/components/*.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "ui",
+    "components",
+    "react",
+    "cross-platform",
+    "{{componentLibrary}}"
+  ],
+  "author": "{{projectName}} Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "TODO: Add repository URL"
+  }
+}
+
+{{!-- TODO: Configure package.json based on selected component library and features --}}
+{{!-- TODO: Add conditional dependencies based on user selections --}}
+{{!-- TODO: Configure build and development scripts --}}

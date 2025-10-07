@@ -1,0 +1,87 @@
+// Chakra UI Theme Configuration for {{projectName}}
+// Chakra UI setup with custom theme and component overrides
+
+import { ChakraProvider, extendTheme } from '@chakra-ui/react'
+import type { ReactNode } from 'react'
+
+{{#if (includes designSystemFeatures "theming")}}
+// Custom theme configuration
+const customTheme = extendTheme({
+  colors: {
+    brand: {
+      50: '#f0f9ff',
+      100: '#e0f2fe', 
+      500: '#0ea5e9',
+      600: '#0284c7',
+      900: '#0c4a6e',
+    },
+    // TODO: Add custom color palette from design tokens
+  },
+  
+  fonts: {
+    heading: 'Inter, sans-serif',
+    body: 'Inter, sans-serif',
+    // TODO: Configure typography from design system
+  },
+  
+  components: {
+    Button: {
+      // TODO: Customize button component styles
+      baseStyle: {
+        fontWeight: 'semibold',
+      },
+      variants: {
+        // TODO: Add custom button variants
+      },
+      sizes: {
+        // TODO: Add custom button sizes
+      },
+    },
+    
+    Input: {
+      // TODO: Customize input component styles  
+    },
+    
+    // TODO: Add more component customizations
+  },
+  
+  // TODO: Add responsive breakpoints
+  // TODO: Add animation configurations
+  // TODO: Configure accessibility features
+})
+{{else}}
+// Basic Chakra UI theme
+const customTheme = extendTheme({
+  // TODO: Add basic theme configuration
+})
+{{/if}}
+
+// Theme Provider Component
+interface ThemeProviderProps {
+  children: ReactNode
+}
+
+export function ThemeProvider({ children }: ThemeProviderProps) {
+  return (
+    <ChakraProvider theme={customTheme}>
+      {children}
+    </ChakraProvider>
+  )
+}
+
+// Re-export commonly used Chakra components
+export {
+  Box,
+  Button, 
+  Input,
+  VStack,
+  HStack,
+  Container,
+  Text,
+  Heading,
+  // TODO: Export more Chakra UI components as needed
+} from '@chakra-ui/react'
+
+// TODO: Create custom component wrappers if needed
+// TODO: Add platform-specific adaptations
+// TODO: Implement component library integration helpers

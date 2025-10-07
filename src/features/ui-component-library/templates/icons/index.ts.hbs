@@ -1,0 +1,132 @@
+// Icon Library Integration for {{projectName}} UI Components
+// Centralized icon system with multiple icon library support
+
+{{#if (includes integrations "icons")}}
+// Lucide React Icons (Primary)
+export {
+  // Navigation icons
+  Menu,
+  X as Close,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  ChevronDown,
+  ArrowLeft,
+  ArrowRight,
+  
+  // Action icons
+  Plus,
+  Minus,
+  Edit,
+  Trash2 as Delete,
+  Save,
+  Copy,
+  ExternalLink,
+  Download,
+  Upload,
+  
+  // Status icons
+  Check,
+  X as Error,
+  AlertCircle as Warning,
+  Info,
+  Loader2 as Loading,
+  
+  // Common icons
+  User,
+  Settings,
+  Search,
+  Home,
+  Mail,
+  Phone,
+  
+  // TODO: Add more icons as needed
+} from 'lucide-react'
+
+// Heroicons (Secondary - for additional icons)
+export {
+  // TODO: Import specific Heroicons as needed
+  UserIcon,
+  CogIcon as SettingsIcon,
+} from '@heroicons/react/24/outline'
+
+// Custom Icon Component Wrapper
+import { LucideIcon } from 'lucide-react'
+import { cn } from '../lib/utils'
+
+interface IconProps {
+  icon: LucideIcon
+  size?: 'sm' | 'md' | 'lg' | 'xl'
+  className?: string
+}
+
+const iconSizes = {
+  sm: 'h-4 w-4',
+  md: 'h-5 w-5', 
+  lg: 'h-6 w-6',
+  xl: 'h-8 w-8'
+}
+
+export function Icon({ icon: IconComponent, size = 'md', className }: IconProps) {
+  return (
+    <IconComponent 
+      className={cn(iconSizes[size], className)}
+      aria-hidden="true"
+    />
+  )
+}
+
+// Icon Button Component
+interface IconButtonProps {
+  icon: LucideIcon
+  onClick?: () => void
+  size?: 'sm' | 'md' | 'lg'
+  variant?: 'default' | 'ghost' | 'outline'
+  className?: string
+  'aria-label': string
+}
+
+export function IconButton({ 
+  icon: IconComponent, 
+  onClick, 
+  size = 'md', 
+  variant = 'default',
+  className,
+  'aria-label': ariaLabel,
+  ...props 
+}: IconButtonProps) {
+  // TODO: Implement icon button with proper styling and accessibility
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center justify-center rounded-md transition-colors',
+        'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+        'disabled:pointer-events-none disabled:opacity-50',
+        className
+      )}
+      aria-label={ariaLabel}
+      {...props}
+    >
+      <Icon icon={IconComponent} size={size} />
+    </button>
+  )
+}
+
+{{else}}
+// TODO: Implement basic icon system without external libraries
+// TODO: Add SVG icon components
+// TODO: Create icon sprite system for performance
+{{/if}}
+
+// Icon Registry for dynamic loading
+export const iconRegistry = {
+  // TODO: Add icon registry for dynamic icon loading
+  // TODO: Support for custom icon sets
+  // TODO: Icon caching and optimization
+}
+
+// TODO: Add platform-specific icon adaptations
+// TODO: Implement icon theming support
+// TODO: Add icon accessibility helpers
+// TODO: Create icon documentation and catalog

@@ -1,0 +1,37 @@
+// shadcn/ui Component Library Configuration
+// Cross-platform compatible components using Tailwind CSS and CVA
+
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+// TODO: Implement shadcn/ui component adaptations for cross-platform use
+// TODO: Add platform-specific styling and behavior
+// TODO: Configure component variants using class-variance-authority
+// TODO: Add custom shadcn components for {{componentCategories}}
+// TODO: Implement theme integration with {{designSystemFeatures}}
+
+{{#if (includes designSystemFeatures "theming")}}
+// Theme configuration for shadcn components
+export const themes = {
+  light: {
+    // TODO: Define light theme variables
+  },
+  dark: {
+    // TODO: Define dark theme variables
+  }
+}
+{{/if}}
+
+{{#if (includes designSystemFeatures "variants")}}
+// Component variant configurations
+export const componentVariants = {
+  // TODO: Define size, color, and style variants for components
+  sizes: ['sm', 'md', 'lg', 'xl'],
+  colors: ['primary', 'secondary', 'accent', 'destructive'],
+  variants: ['default', 'outline', 'ghost', 'link']
+}
+{{/if}}
